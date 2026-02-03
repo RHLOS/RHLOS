@@ -13,6 +13,20 @@ const Auth = (() => {
             return;
         }
 
+        // Handle redirect result (for mobile sign-in)
+        auth.getRedirectResult()
+            .then((result) => {
+                if (result && result.user) {
+                    console.log('[Auth] Redirect sign-in successful:', result.user.email);
+                }
+            })
+            .catch((error) => {
+                console.error('[Auth] Redirect sign-in failed:', error);
+                if (error.code !== 'auth/no-auth-event') {
+                    alert('Inloggen mislukt: ' + error.message);
+                }
+            });
+
         // Listen for auth state changes
         auth.onAuthStateChanged((user) => {
             currentUser = user;
@@ -32,19 +46,35 @@ const Auth = (() => {
 
     function signInWithGoogle() {
         const auth = getFirebaseAuth();
-        if (!auth) return Promise.reject('Auth not available');
+        if (!auth) {
+            console.error('[Auth] Firebase Auth not available');
+            alert('Firebase niet beschikbaar. Probeer de pagina te verversen.');
+            return Promise.reject('Auth not available');
+        }
 
         const provider = new firebase.auth.GoogleAuthProvider();
 
-        // Use redirect on mobile, popup on desktop
+        // Use redirect on mobile/PWA, popup on desktop
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-        if (isMobile) {
-            return auth.signInWithRedirect(provider);
-        } else {
-            return auth.signInWithPopup(provider)
+        console.log('[Auth] Starting sign in, isMobile:', isMobile, 'isStandalone:', isStandalone);
+
+        if (isMobile || isStandalone) {
+            console.log('[Auth] Using redirect flow');
+            return auth.signInWithRedirect(provider)
                 .catch((error) => {
-                    console.error('[Auth] Sign in failed:', error);
+                    console.error('[Auth] Redirect failed:', error);
+                    alert('Inloggen mislukt: ' + error.message);
+                });
+        } else {
+            console.log('[Auth] Using popup flow');
+            return auth.signInWithPopup(provider)
+                .then((result) => {
+                    console.log('[Auth] Popup sign-in successful');
+                })
+                .catch((error) => {
+                    console.error('[Auth] Popup sign in failed:', error);
                     alert('Inloggen mislukt: ' + error.message);
                 });
         }
