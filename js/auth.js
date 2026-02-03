@@ -64,6 +64,7 @@ const Auth = (() => {
 
         console.log('[Auth] Starting sign in, isMobile:', isMobile, 'isStandalone:', isStandalone);
 
+        // Always use popup - more reliable on iOS Safari
         if (false && (isMobile || isStandalone)) {
             console.log('[Auth] Using redirect flow');
             return auth.signInWithRedirect(provider)
