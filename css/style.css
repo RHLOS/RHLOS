@@ -57,6 +57,122 @@ body.theme-evening { background: #152e1b; }
 }
 .global-title:active { opacity: 0.6; }
 
+/* --- Auth & Sync UI --- */
+.global-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.login-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.login-btn:active { opacity: 0.7; }
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.user-name {
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.logout-btn {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.logout-btn:active { opacity: 0.7; }
+
+.sync-status {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text2);
+    padding: 4px 8px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.05);
+}
+.sync-status.syncing { color: var(--orange); }
+.sync-status.synced { color: var(--green); }
+.sync-status.error { color: var(--red); }
+.sync-status.offline { color: var(--text2); }
+
+#sync-icon {
+    font-size: 14px;
+}
+.sync-status.syncing #sync-icon {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Themed auth UI */
+body.theme-night .login-btn,
+body.theme-morning .login-btn,
+body.theme-afternoon .login-btn,
+body.theme-evening .login-btn {
+    background: rgba(255,255,255,0.2);
+}
+body.theme-night .user-name,
+body.theme-morning .user-name,
+body.theme-afternoon .user-name,
+body.theme-evening .user-name {
+    color: rgba(255,255,255,0.9);
+}
+body.theme-night .logout-btn,
+body.theme-morning .logout-btn,
+body.theme-afternoon .logout-btn,
+body.theme-evening .logout-btn {
+    color: rgba(255,255,255,0.6);
+    border-color: rgba(255,255,255,0.2);
+}
+body.theme-night .sync-status,
+body.theme-morning .sync-status,
+body.theme-afternoon .sync-status,
+body.theme-evening .sync-status {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+}
+
+/* Hide on small screens - show abbreviated */
+@media (max-width: 400px) {
+    .user-name { display: none; }
+    .logout-btn { padding: 6px 8px; font-size: 11px; }
+    #sync-text { display: none; }
+}
+
 /* Header themed */
 body.theme-night .global-header,
 body.theme-morning .global-header,

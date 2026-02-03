@@ -36,6 +36,22 @@
      ============================================================ -->
 <div class="global-header" id="global-header">
     <h1 class="global-title" onclick="Layout.goHome()">RHL-OS</h1>
+
+    <!-- Auth & Sync Status -->
+    <div class="header-right">
+        <div class="sync-status hidden" id="sync-status">
+            <span id="sync-icon">○</span>
+            <span id="sync-text">Offline</span>
+        </div>
+        <button class="login-btn" id="login-btn" onclick="Auth.signInWithGoogle()">
+            <span>Inloggen</span>
+        </button>
+        <div class="user-info hidden" id="user-info">
+            <img class="user-avatar" id="user-avatar" src="" alt="Avatar">
+            <span class="user-name" id="user-name"></span>
+            <button class="logout-btn" id="logout-btn" onclick="Auth.signOut()">Uitloggen</button>
+        </div>
+    </div>
 </div>
 
 <!-- ============================================================
@@ -1169,7 +1185,17 @@
     <button class="streak-toast-btn" onclick="StreakCelebration.dismiss()">Geweldig!</button>
 </div>
 
-<!-- Scripts -->
+<!-- Firebase SDK (from CDN) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+<!-- Firebase Config & Auth (must load before other scripts) -->
+<script src="js/firebase-config.js?v=1"></script>
+<script src="js/auth.js?v=1"></script>
+<script src="js/sync.js?v=1"></script>
+
+<!-- App Scripts -->
 <script src="js/db.js?v=5"></script>
 <script src="js/export.js?v=5"></script>
 <script src="js/app.js?v=5"></script>

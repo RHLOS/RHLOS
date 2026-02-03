@@ -51,6 +51,16 @@ const Layout = (() => {
     }
 
     function init() {
+        // Initialize Firebase first
+        if (typeof initializeFirebase === 'function') {
+            initializeFirebase();
+        }
+
+        // Initialize Auth (listens for sign-in state)
+        if (typeof Auth !== 'undefined' && Auth.init) {
+            Auth.init();
+        }
+
         goHome();
         App.init();
         HabitsApp.init();
