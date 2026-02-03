@@ -64,7 +64,7 @@ const Auth = (() => {
 
         console.log('[Auth] Starting sign in, isMobile:', isMobile, 'isStandalone:', isStandalone);
 
-        if (isMobile || isStandalone) {
+        if (false && (isMobile || isStandalone)) {
             console.log('[Auth] Using redirect flow');
             return auth.signInWithRedirect(provider)
                 .catch((error) => {
