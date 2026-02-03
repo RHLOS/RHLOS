@@ -13,15 +13,19 @@ const Auth = (() => {
             return;
         }
 
+        console.log('[Auth] Initializing, checking for redirect result...');
+
         // Handle redirect result (for mobile sign-in)
-        auth.getRedirectResult()
+        firebase.auth().getRedirectResult()
             .then((result) => {
                 if (result && result.user) {
                     console.log('[Auth] Redirect sign-in successful:', result.user.email);
+                } else {
+                    console.log('[Auth] No redirect result (normal if not returning from sign-in)');
                 }
             })
             .catch((error) => {
-                console.error('[Auth] Redirect sign-in failed:', error);
+                console.error('[Auth] Redirect sign-in error:', error.code, error.message);
                 if (error.code !== 'auth/no-auth-event') {
                     alert('Inloggen mislukt: ' + error.message);
                 }
