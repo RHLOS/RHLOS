@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RHLOS">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="description" content="Personal health, habits & productivity tracker">
+    <title>RHLOS</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- App Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-192.png">
+
+    <!-- Splash screens for iOS -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css?v=5">
+    <link rel="stylesheet" href="css/habits.css?v=5">
+    <link rel="stylesheet" href="css/work.css?v=5">
+</head>
+<body>
+
+<!-- ============================================================
+     GLOBAL HEADER
+     ============================================================ -->
+<div class="global-header" id="global-header">
+    <h1 class="global-title" onclick="Layout.goHome()">RHL-OS</h1>
+</div>
+
+<!-- ============================================================
+     LAUNCHER (Laag 1)
+     ============================================================ -->
+<div class="launcher active" id="launcher">
+
+    <!-- Welcome Greeting -->
+    <div class="home-greeting" id="home-greeting">
+        <div class="greeting-text" id="greeting-text">Goedemorgen</div>
+        <div class="greeting-name">Raimon</div>
+        <div class="greeting-date" id="greeting-date"></div>
+    </div>
+
+    <!-- Flip Clock -->
+    <div class="flip-clock" id="flip-clock">
+        <div class="flip-unit">
+            <div class="flip-card" id="flip-h1"><span>0</span></div>
+            <div class="flip-card" id="flip-h2"><span>0</span></div>
+        </div>
+        <div class="flip-colon">:</div>
+        <div class="flip-unit">
+            <div class="flip-card" id="flip-m1"><span>0</span></div>
+            <div class="flip-card" id="flip-m2"><span>0</span></div>
+        </div>
+        <div class="flip-colon flip-colon-sec">:</div>
+        <div class="flip-unit flip-unit-sec">
+            <div class="flip-card flip-card-sec" id="flip-s1"><span>0</span></div>
+            <div class="flip-card flip-card-sec" id="flip-s2"><span>0</span></div>
+        </div>
+    </div>
+
+    <!-- Weather Widget -->
+    <div class="weather-widget" id="weather-widget">
+        <div class="weather-loading" id="weather-loading">
+            <span class="weather-spinner"></span>
+            Weer ophalen...
+        </div>
+        <div class="weather-content hidden" id="weather-content">
+            <div class="weather-main">
+                <div class="weather-icon" id="weather-icon">&#9728;&#65039;</div>
+                <div class="weather-temp" id="weather-temp">--°</div>
+            </div>
+            <div class="weather-details">
+                <div class="weather-desc" id="weather-desc">--</div>
+                <div class="weather-location" id="weather-location">--</div>
+                <div class="weather-extra">
+                    <span id="weather-feel">Voelt als --°</span>
+                    <span class="weather-dot">·</span>
+                    <span id="weather-wind">Wind -- km/u</span>
+                </div>
+            </div>
+        </div>
+        <div class="weather-error hidden" id="weather-error">
+            <span>&#9888;&#65039;</span>
+            <span id="weather-error-msg">Weer niet beschikbaar</span>
+        </div>
+    </div>
+
+    <!-- Quote of the Day -->
+    <div class="quote-widget" id="quote-widget">
+        <div class="quote-title">Quote of the day:</div>
+        <div class="quote-text" id="quote-text"></div>
+        <button class="quote-refresh" onclick="Homepage.refreshQuote()" title="Nieuwe quote">&#8635;</button>
+    </div>
+
+    <!-- App Cards -->
+    <div class="launcher-grid">
+        <div class="launcher-card" onclick="Layout.openApp('habits')">
+            <div class="launcher-icon">&#10003;</div>
+            <div class="launcher-label">Habit Tracker</div>
+        </div>
+        <div class="launcher-card" onclick="Layout.openApp('health')">
+            <div class="launcher-icon">&#10084;&#65039;</div>
+            <div class="launcher-label">Health Logger</div>
+        </div>
+        <div class="launcher-card" onclick="Layout.openApp('5mj')">
+            <div class="launcher-icon">&#128214;</div>
+            <div class="launcher-label">Journal</div>
+        </div>
+        <div class="launcher-card" onclick="Layout.openApp('work')">
+            <div class="launcher-icon">💼</div>
+            <div class="launcher-label">Quick Task</div>
+        </div>
+        <div class="launcher-card">
+            <div class="launcher-icon">📝</div>
+            <div class="launcher-label">Notes</div>
+        </div>
+        <div class="launcher-card">
+            <div class="launcher-icon">📊</div>
+            <div class="launcher-label">Analysis</div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     APP VIEWS (Laag 2) — one visible at a time
+     ============================================================ -->
+<div class="app-view" id="app-container">
+
+<!-- Mini-nav: quick switch between apps -->
+<nav class="app-nav" id="app-nav">
+    <button class="app-nav-btn" data-app="habits" onclick="Layout.openApp('habits')">
+        <span class="app-nav-icon">&#10003;</span>Habits
+    </button>
+    <button class="app-nav-btn" data-app="health" onclick="Layout.openApp('health')">
+        <span class="app-nav-icon">&#10084;&#65039;</span>Health
+    </button>
+    <button class="app-nav-btn" data-app="5mj" onclick="Layout.openApp('5mj')">
+        <span class="app-nav-icon">&#128214;</span>Journal
+    </button>
+    <button class="app-nav-btn" data-app="work" onclick="Layout.openApp('work')">
+        <span class="app-nav-icon">💼</span>Tasks
+    </button>
+</nav>
+
+<!-- ==============================================================
+     VIEW: HABIT TRACKER
+     ============================================================== -->
+<div class="app-panel panel-habits" id="panel-habits">
+
+    <div class="header" id="habits-header">
+        <div>
+            <h1>Habits</h1>
+            <div class="subtitle" id="habits-date"></div>
+        </div>
+    </div>
+
+    <!-- PAGE: TODAY -->
+    <div class="ht-page active" id="ht-page-today">
+        <div class="month-nav">
+            <button onclick="HabitsApp.prevDay()">&#8249;</button>
+            <span class="month-title" id="ht-today-date">Vandaag</span>
+            <button onclick="HabitsApp.nextDay()">&#8250;</button>
+        </div>
+        <div id="ht-habits-list"></div>
+    </div>
+
+    <!-- PAGE: CALENDAR -->
+    <div class="ht-page" id="ht-page-calendar">
+        <div class="month-nav">
+            <button onclick="HabitsApp.calendarPrev()">&#8249;</button>
+            <span class="month-title" id="ht-calendar-month"></span>
+            <button onclick="HabitsApp.calendarNext()">&#8250;</button>
+        </div>
+        <div id="ht-calendar-habit-select"></div>
+        <div id="ht-calendar-grid" class="ht-calendar-grid"></div>
+        <div id="ht-calendar-summary"></div>
+    </div>
+
+    <!-- PAGE: STATISTICS -->
+    <div class="ht-page" id="ht-page-stats">
+        <div id="ht-stats-content"></div>
+    </div>
+
+    <!-- PAGE: MANAGE -->
+    <div class="ht-page" id="ht-page-manage">
+        <div id="ht-manage-list"></div>
+    </div>
+
+    <!-- MODAL: Add/Edit Habit -->
+    <div class="modal-overlay" id="modal-habit-edit" onclick="if(event.target===this)HabitsApp.closeModal('modal-habit-edit')">
+        <div class="modal">
+            <form onsubmit="event.preventDefault(); HabitsApp.saveHabit();">
+                <div class="modal-header">
+                    <h2 id="habit-modal-title">Nieuwe Gewoonte</h2>
+                    <button type="button" class="modal-close" onclick="HabitsApp.closeModal('modal-habit-edit')">&#10005;</button>
+                </div>
+                <div class="form-group">
+                    <label>Naam</label>
+                    <input type="text" id="input-habit-name" placeholder="Bijv. Mediteren">
+                </div>
+                <div class="form-group">
+                    <label>Icoon</label>
+                    <div id="habit-icon-picker" class="icon-picker"></div>
+                </div>
+                <div class="form-group">
+                    <label>Kleur</label>
+                    <div id="habit-color-picker" class="color-picker"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Aantal keer</label>
+                        <input type="number" inputmode="numeric" id="input-habit-goal-count" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Per</label>
+                        <select id="input-habit-frequency">
+                            <option value="daily">Dag</option>
+                            <option value="weekly">Week</option>
+                            <option value="monthly">Maand</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Categorie (optioneel)</label>
+                    <input type="text" id="input-habit-category" placeholder="Bijv. Gezondheid">
+                </div>
+                <button type="submit" class="btn btn-primary">Bewaar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Habit Detail -->
+    <div class="modal-overlay" id="modal-habit-detail" onclick="if(event.target===this)HabitsApp.closeModal('modal-habit-detail')">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="habit-detail-title"></h2>
+                <button class="modal-close" onclick="HabitsApp.closeModal('modal-habit-detail')">&#10005;</button>
+            </div>
+            <div id="habit-detail-content"></div>
+            <div class="btn-row mt-16">
+                <button class="btn btn-primary" onclick="HabitsApp.editCurrentHabit()">Bewerken</button>
+                <button class="btn btn-danger" onclick="HabitsApp.deleteCurrentHabit()">Archiveren</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB BAR: Habit Tracker -->
+    <nav class="tab-bar" id="habits-tab-bar">
+        <button id="ht-tab-today" class="active" onclick="HabitsApp.showPage('today')">
+            <span class="tab-icon">&#10003;</span>
+            Vandaag
+        </button>
+        <button id="ht-tab-stats" onclick="HabitsApp.showPage('stats')">
+            <span class="tab-icon">&#128200;</span>
+            Statistieken
+        </button>
+        <button id="ht-tab-manage" onclick="HabitsApp.showPage('manage')">
+            <span class="tab-icon">&#128736;</span>
+            Beheer
+        </button>
+    </nav>
+
+</div><!-- /panel-habits -->
+
+<!-- ==============================================================
+     VIEW: HEALTH LOGGER
+     ============================================================== -->
+<div class="app-panel panel-health" id="panel-health">
+
+    <!-- HEADER -->
+    <div class="header" id="main-header">
+        <div>
+            <h1>Health</h1>
+        </div>
+    </div>
+
+    <!-- PAGE: HOME -->
+    <div class="page active" id="page-home">
+        <div class="month-nav">
+            <button onclick="App.homePrevDay()">&#8249;</button>
+            <span class="month-title" id="home-date"></span>
+            <button onclick="App.homeNextDay()">&#8250;</button>
+        </div>
+        <div class="card-grid">
+            <div class="card" onclick="App.openWeightModal()">
+                <div class="card-icon">&#9878;&#65039;</div>
+                <div class="card-label">Gewicht</div>
+                <div class="card-value" id="card-weight-val">&ndash;</div>
+            </div>
+            <div class="card" onclick="App.openBPModal()">
+                <div class="card-icon">&#10084;&#65039;</div>
+                <div class="card-label">Bloeddruk</div>
+                <div class="card-value" id="card-bp-val">&ndash;</div>
+            </div>
+            <div class="card" onclick="App.openGymModal()">
+                <div class="card-icon">&#128170;</div>
+                <div class="card-label">Movement</div>
+                <div class="card-value" id="card-gym-val">&ndash;</div>
+            </div>
+            <div class="card" onclick="App.openWorkoutPicker()">
+                <div class="card-icon">&#127947;&#65039;</div>
+                <div class="card-label">Workouts</div>
+                <div class="card-value" id="card-workout-val">&ndash;</div>
+            </div>
+            <div class="card" onclick="App.openNutritionModal()">
+                <div class="card-icon">&#127858;</div>
+                <div class="card-label">Voeding</div>
+                <div class="card-value" id="card-nutrition-val">&ndash;</div>
+            </div>
+            <div class="card" onclick="App.openDrinksModal()">
+                <div class="card-icon">&#9749;</div>
+                <div class="card-label">Drankjes</div>
+                <div class="card-value" id="card-drinks-val">&ndash;</div>
+            </div>
+            <div class="card" onclick="App.openSleepModal()">
+                <div class="card-icon">&#127769;</div>
+                <div class="card-label">Slaap</div>
+                <div class="card-value" id="card-sleep-val">&ndash;</div>
+            </div>
+        </div>
+        <div id="home-sessions"></div>
+    </div>
+
+    <!-- PAGE: WORKOUT LOG (sub-page) -->
+    <div class="page" id="page-workout-log">
+        <div class="back-btn-wrap">
+            <button class="back-btn" onclick="App.backFromWorkoutLog()">&larr; Terug</button>
+        </div>
+        <h2 id="wl-title" style="font-size: 20px; margin-bottom: 4px;"></h2>
+        <div id="wl-time" class="text-muted mb-12"></div>
+        <div id="wl-completed-msg" class="text-muted mb-12 text-green hidden"></div>
+        <div id="wl-exercises"></div>
+        <div class="btn-row mt-16">
+            <button id="wl-complete-btn" class="btn btn-primary" onclick="App.completeWorkout()">
+                &#10003; Workout Afronden
+            </button>
+            <button id="wl-delete-btn" class="btn btn-danger" onclick="App.deleteWorkout()">
+                &#128465; Verwijderen
+            </button>
+        </div>
+    </div>
+
+    <!-- PAGE: HISTORY -->
+    <div class="page" id="page-history">
+        <div class="month-nav">
+            <button onclick="App.historyPrev()">&#8249;</button>
+            <span class="month-title" id="history-month"></span>
+            <button onclick="App.historyNext()">&#8250;</button>
+        </div>
+        <div id="history-list"></div>
+    </div>
+
+    <!-- PAGE: DAY DETAIL (sub-page) -->
+    <div class="page" id="page-day-detail">
+        <div class="back-btn-wrap">
+            <button class="back-btn" onclick="App.backFromDayDetail()">&larr; Terug</button>
+        </div>
+        <h2 id="dd-title" style="font-size: 20px; margin-bottom: 12px;"></h2>
+        <div id="dd-content"></div>
+    </div>
+
+    <!-- PAGE: EXPORT -->
+    <div class="page" id="page-export">
+        <div class="section-title">Periode</div>
+        <div class="list">
+            <div class="form-group" style="padding: 12px 16px;">
+                <label>Van</label>
+                <input type="date" id="export-start">
+            </div>
+            <div class="form-group" style="padding: 0 16px 12px;">
+                <label>Tot</label>
+                <input type="date" id="export-end">
+            </div>
+        </div>
+        <div class="section-title mt-16">Opties</div>
+        <div class="list">
+            <div class="settings-row">
+                <label class="settings-label" for="export-workouts">Inclusief workouts</label>
+                <input type="checkbox" id="export-workouts" checked>
+            </div>
+            <div class="settings-row">
+                <label class="settings-label" for="export-habits">Inclusief habits</label>
+                <input type="checkbox" id="export-habits" checked>
+            </div>
+            <div class="settings-row">
+                <label class="settings-label" for="export-journal">Inclusief journal (5MJ + Daily Review)</label>
+                <input type="checkbox" id="export-journal" checked>
+            </div>
+            <div class="settings-row">
+                <label class="settings-label" for="export-weeksummary">Inclusief weekoverzichten</label>
+                <input type="checkbox" id="export-weeksummary" checked>
+            </div>
+        </div>
+        <div class="btn-row mt-16">
+            <button class="btn btn-primary" onclick="App.doExport('csv')">&#128196; CSV Export</button>
+            <button class="btn btn-primary" onclick="App.doExport('pdf')">&#128202; PDF Export</button>
+        </div>
+    </div>
+
+    <!-- PAGE: SETTINGS -->
+    <div class="page" id="page-settings">
+        <div class="section-title">Data</div>
+        <div class="list">
+            <div class="settings-row">
+                <span class="settings-label">Opslag</span>
+                <span class="settings-value">LocalStorage (browser)</span>
+            </div>
+        </div>
+        <div class="section-title mt-16">Gevaarlijke zone</div>
+        <div class="list">
+            <div style="padding: 16px;">
+                <button class="btn btn-danger btn-small" onclick="App.clearAllData()">
+                    Alle gegevens wissen
+                </button>
+                <div class="text-muted mt-8">Dit verwijdert permanent alle opgeslagen data.</div>
+            </div>
+        </div>
+        <div class="section-title mt-16">Over</div>
+        <div class="list">
+            <div class="settings-row">
+                <span class="settings-label">Versie</span>
+                <span class="settings-value">2.0.0</span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-label">App</span>
+                <span class="settings-value">RHLOS</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Weight Modal -->
+    <div class="modal-overlay" id="modal-weight" onclick="App.onOverlayClick(event, 'modal-weight')">
+        <div class="modal">
+            <form onsubmit="event.preventDefault(); App.saveWeight();">
+                <div class="modal-header">
+                    <h2>Gewicht</h2>
+                    <button type="button" class="modal-close" onclick="App.closeModal('modal-weight')">&#10005;</button>
+                </div>
+                <div class="form-group">
+                    <label>Gewicht in kg</label>
+                    <input type="number" inputmode="decimal" step="0.1" id="input-weight" placeholder="82.5">
+                </div>
+                <button type="submit" class="btn btn-primary">Bewaar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Blood Pressure Modal -->
+    <div class="modal-overlay" id="modal-bp" onclick="App.onOverlayClick(event, 'modal-bp')">
+        <div class="modal">
+            <form onsubmit="event.preventDefault(); App.saveBP();">
+                <div class="modal-header">
+                    <h2>Bloeddruk</h2>
+                    <button type="button" class="modal-close" onclick="App.closeModal('modal-bp')">&#10005;</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Systolisch</label>
+                        <input type="number" inputmode="numeric" id="input-bp-sys" placeholder="120">
+                    </div>
+                    <div class="form-group">
+                        <label>Diastolisch</label>
+                        <input type="number" inputmode="numeric" id="input-bp-dia" placeholder="80">
+                    </div>
+                    <div class="form-group">
+                        <label>Pols</label>
+                        <input type="number" inputmode="numeric" id="input-bp-pulse" placeholder="70">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Moment</label>
+                    <div class="segment-control" id="bp-moment-seg">
+                        <button type="button" data-val="AM" class="active" onclick="App.setBPMoment('AM')">AM</button>
+                        <button type="button" data-val="PM" onclick="App.setBPMoment('PM')">PM</button>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button type="submit" class="btn btn-primary">Bewaar</button>
+                    <button type="button" class="btn btn-primary" onclick="App.skipBP()">Niet gemeten</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sleep Modal -->
+    <div class="modal-overlay" id="modal-sleep" onclick="App.onOverlayClick(event, 'modal-sleep')">
+        <div class="modal">
+            <form onsubmit="event.preventDefault(); App.saveSleep();">
+                <div class="modal-header">
+                    <h2>Slaap</h2>
+                    <button type="button" class="modal-close" onclick="App.closeModal('modal-sleep')">&#10005;</button>
+                </div>
+                <div class="form-group">
+                    <label>Waar ben je vanochtend wakker geworden?</label>
+                    <select id="input-sleep-location" onchange="App.onSleepLocationChange()">
+                        <option value="Thuis">Thuis</option>
+                        <option value="Vinkeveen">Vinkeveen</option>
+                        <option value="Anders">Anders</option>
+                    </select>
+                </div>
+                <div class="form-group hidden" id="sleep-custom-location-group">
+                    <label>Locatie</label>
+                    <input type="text" id="input-sleep-custom-location" placeholder="Bijv. hotel, bij vrienden...">
+                </div>
+                <div class="form-group">
+                    <label>Aantal uur</label>
+                    <input type="number" inputmode="decimal" step="0.5" id="input-sleep-hours" placeholder="7.5">
+                </div>
+                <div class="form-group">
+                    <label>Onderbroken?</label>
+                    <div class="segment-control" id="sleep-interrupted-seg">
+                        <button type="button" data-val="no" class="active" onclick="App.setSleepInterrupted(false)">Nee</button>
+                        <button type="button" data-val="yes" onclick="App.setSleepInterrupted(true)">Ja</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notitie</label>
+                    <textarea id="input-sleep-note" rows="3" placeholder="Bijv. laat naar bed, onrustig geslapen..." class="form-textarea"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Bewaar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Gym Modal -->
+    <div class="modal-overlay" id="modal-gym" onclick="App.onOverlayClick(event, 'modal-gym')">
+        <div class="modal">
+            <form onsubmit="event.preventDefault(); App.saveGym();">
+                <div class="modal-header">
+                    <h2>Movement Sessie</h2>
+                    <button type="button" class="modal-close" onclick="App.closeModal('modal-gym')">&#10005;</button>
+                </div>
+                <!-- Ja/Nee vraag -->
+                <div class="form-group">
+                    <label>Ben je naar de gym geweest?</label>
+                    <div class="btn-row">
+                        <button type="button" class="btn btn-green" id="gym-btn-yes" onclick="App.onGymAttendance(true)">Ja</button>
+                        <button type="button" class="btn btn-danger" id="gym-btn-no" onclick="App.onGymAttendance(false)">Nee</button>
+                    </div>
+                </div>
+                <!-- Nee-flow: reden -->
+                <div id="gym-no-section" class="hidden">
+                    <div class="form-group">
+                        <label>Waarom niet?</label>
+                        <textarea id="input-gym-reason" rows="3" placeholder="Bijv. geen tijd, niet lekker..." class="form-textarea"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Bewaar</button>
+                </div>
+                <!-- Ja-flow: sessie details -->
+                <div id="gym-yes-section" class="hidden">
+                    <div class="form-group">
+                        <label>Type sessie</label>
+                        <select id="input-gym-type" onchange="App.onGymTypeChange()">
+                            <option value="Krachttraining">Krachttraining</option>
+                            <option value="Cardio">Cardio</option>
+                            <option value="Wandelen">Wandelen</option>
+                            <option value="Anders">Anders</option>
+                        </select>
+                    </div>
+                    <div class="form-group hidden" id="gym-custom-type-group">
+                        <label>Welk type?</label>
+                        <input type="text" id="input-gym-custom-type" placeholder="Bijv. Yoga, Zwemmen...">
+                    </div>
+                    <div class="form-group hidden" id="gym-km-group">
+                        <label>Afstand (km)</label>
+                        <input type="number" inputmode="decimal" step="0.1" id="input-gym-km" placeholder="5.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Duur (minuten)</label>
+                        <input type="number" inputmode="numeric" id="input-gym-duration" placeholder="60">
+                    </div>
+                    <div class="form-group">
+                        <label>Notities</label>
+                        <textarea id="input-gym-note" rows="3" placeholder="Bijv. focus op benen, goed gevoel..." class="form-textarea"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Bewaar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Drinks Modal -->
+    <div class="modal-overlay" id="modal-drinks" onclick="App.onOverlayClick(event, 'modal-drinks')">
+        <div class="modal">
+            <form onsubmit="event.preventDefault(); App.saveDrinks();">
+                <div class="modal-header">
+                    <h2>Drankjes</h2>
+                    <button type="button" class="modal-close" onclick="App.closeModal('modal-drinks')">&#10005;</button>
+                </div>
+                <div class="section-title" style="margin-top:0;">&#9749; Koffie</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Kopjes koffie</label>
+                        <input type="number" inputmode="numeric" id="input-drinks-coffee" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Kopjes decaf</label>
+                        <input type="number" inputmode="numeric" id="input-drinks-decaf" placeholder="0" min="0">
+                    </div>
+                </div>
+                <div class="section-title">&#127863; Alcohol</div>
+                <div class="form-group">
+                    <label>Alcohol gedronken?</label>
+                    <div class="segment-control" id="drinks-alcohol-seg">
+                        <button type="button" data-val="no" class="active" onclick="App.setDrinksAlcohol(false)">Nee</button>
+                        <button type="button" data-val="yes" onclick="App.setDrinksAlcohol(true)">Ja</button>
+                    </div>
+                </div>
+                <div class="hidden" id="drinks-alcohol-details">
+                    <div class="form-group">
+                        <label>Aantal glazen</label>
+                        <input type="number" inputmode="numeric" id="input-drinks-alcohol-glasses" placeholder="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Wat gedronken?</label>
+                        <textarea id="input-drinks-alcohol-note" rows="2" placeholder="Bijv. 2 bier, 1 glas wijn..." class="form-textarea"></textarea>
+                    </div>
+                </div>
+                <div class="section-title">&#128167; Water</div>
+                <div class="form-group">
+                    <label>Hoeveel liter water gedronken?</label>
+                    <input type="number" inputmode="decimal" step="0.5" id="input-drinks-water" placeholder="2.0" min="0" max="10">
+                </div>
+                <button type="submit" class="btn btn-primary">Bewaar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Nutrition Modal -->
+    <div class="modal-overlay" id="modal-nutrition" onclick="App.onOverlayClick(event, 'modal-nutrition')">
+        <div class="modal">
+            <form onsubmit="event.preventDefault(); App.saveNutrition();">
+                <div class="modal-header">
+                    <h2>Voeding</h2>
+                    <button type="button" class="modal-close" onclick="App.closeModal('modal-nutrition')">&#10005;</button>
+                </div>
+                <div class="section-title" style="margin-top:0;">&#127859; Ontbijt</div>
+                <div class="form-group">
+                    <textarea id="input-nutrition-ontbijt" rows="2" placeholder="Wat heb je gegeten?" class="form-textarea"></textarea>
+                </div>
+                <div class="section-title">&#127849; Tussendoor 1</div>
+                <div class="form-group">
+                    <textarea id="input-nutrition-tussen1" rows="2" placeholder="Wat heb je gegeten?" class="form-textarea"></textarea>
+                </div>
+                <div class="section-title">&#127860; Lunch</div>
+                <div class="form-group">
+                    <textarea id="input-nutrition-lunch" rows="2" placeholder="Wat heb je gegeten?" class="form-textarea"></textarea>
+                </div>
+                <div class="section-title">&#127848; Tussendoor 2</div>
+                <div class="form-group">
+                    <textarea id="input-nutrition-tussen2" rows="2" placeholder="Wat heb je gegeten?" class="form-textarea"></textarea>
+                </div>
+                <div class="section-title">&#127869; Diner</div>
+                <div class="form-group">
+                    <textarea id="input-nutrition-diner" rows="2" placeholder="Wat heb je gegeten?" class="form-textarea"></textarea>
+                </div>
+                <div class="section-title">&#127852; Tussendoor 3</div>
+                <div class="form-group">
+                    <textarea id="input-nutrition-tussen3" rows="2" placeholder="Wat heb je gegeten?" class="form-textarea"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Bewaar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Workout Picker Modal -->
+    <div class="modal-overlay" id="modal-workout-picker" onclick="App.onOverlayClick(event, 'modal-workout-picker')">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Start Workout</h2>
+                <button class="modal-close" onclick="App.closeModal('modal-workout-picker')">&#10005;</button>
+            </div>
+            <div class="list" id="template-list"></div>
+        </div>
+    </div>
+
+    <!-- TAB BAR: Health Logger -->
+    <nav class="tab-bar" id="health-tab-bar">
+        <button id="tab-home" class="active" onclick="App.showPage('home')">
+            <span class="tab-icon">&#127968;</span>
+            Home
+        </button>
+        <button id="tab-history" onclick="App.showPage('history')">
+            <span class="tab-icon">&#128197;</span>
+            Historie
+        </button>
+        <button id="tab-export" onclick="App.showPage('export')">
+            <span class="tab-icon">&#128228;</span>
+            Export
+        </button>
+        <button id="tab-settings" onclick="App.showPage('settings')">
+            <span class="tab-icon">&#9881;&#65039;</span>
+            Instellingen
+        </button>
+    </nav>
+
+</div><!-- /panel-health -->
+
+<!-- ==============================================================
+     VIEW: JOURNAL
+     ============================================================== -->
+<div class="app-panel panel-5mj" id="panel-5mj">
+
+    <!-- HEADER -->
+    <div class="header" id="5mj-header">
+        <div>
+            <h1>Journal</h1>
+            <div class="subtitle" id="5mj-date"></div>
+        </div>
+    </div>
+
+    <!-- PAGE: HOME (laag 2 — kaarten overzicht) -->
+    <div class="page active" id="5mj-page-home">
+        <div class="launcher-grid journal-grid">
+            <div class="launcher-card" onclick="FiveMJ.showPage('5mj')">
+                <div class="launcher-icon">&#9997;</div>
+                <div class="launcher-label">5MJ</div>
+            </div>
+            <div class="launcher-card" onclick="FiveMJ.showPage('daily')">
+                <div class="launcher-icon">&#9728;&#65039;</div>
+                <div class="launcher-label">Daily Review</div>
+            </div>
+            <div class="launcher-card" onclick="FiveMJ.showPage('weekly')">
+                <div class="launcher-icon">7️⃣</div>
+                <div class="launcher-label">Weekly Review</div>
+            </div>
+            <div class="launcher-card" onclick="FiveMJ.showPage('monthly')">
+                <div class="launcher-icon">&#128198;</div>
+                <div class="launcher-label">Monthly Review</div>
+            </div>
+            <div class="launcher-card" onclick="FiveMJ.showPage('quarterly')">
+                <div class="launcher-icon">&#128202;</div>
+                <div class="launcher-label">Quarterly Review</div>
+            </div>
+            <div class="launcher-card" onclick="FiveMJ.showPage('yearly')">
+                <div class="launcher-icon">&#127793;</div>
+                <div class="launcher-label">Yearly Review</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE: 5MJ (laag 3) -->
+    <div class="page" id="5mj-page-5mj">
+        <div class="back-btn-wrap">
+            <button class="back-btn" onclick="FiveMJ.showPage('home')">&larr; Terug</button>
+        </div>
+        <div class="month-nav">
+            <button onclick="FiveMJ.prevDay()">&#8249;</button>
+            <span class="month-title" id="5mj-nav-date">Vandaag</span>
+            <button onclick="FiveMJ.nextDay()">&#8250;</button>
+        </div>
+
+        <div class="section-title">I am grateful for...</div>
+        <div class="list">
+            <div style="padding: 12px 16px;">
+                <textarea id="5mj-grateful" rows="3" placeholder="Waar ben je dankbaar voor vandaag..." class="form-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="section-title">What would make today great?</div>
+        <div class="list">
+            <div style="padding: 12px 16px;">
+                <div class="form-group" style="margin-bottom:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:600;color:var(--text2);font-size:14px;">1.</span>
+                        <input type="text" id="5mj-great-1" placeholder="..." style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:var(--card);color:var(--text);outline:none;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:600;color:var(--text2);font-size:14px;">2.</span>
+                        <input type="text" id="5mj-great-2" placeholder="..." style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:var(--card);color:var(--text);outline:none;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:600;color:var(--text2);font-size:14px;">3.</span>
+                        <input type="text" id="5mj-great-3" placeholder="..." style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:var(--card);color:var(--text);outline:none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Daily affirmations. I am...</div>
+        <div class="list">
+            <div style="padding: 12px 16px;">
+                <textarea id="5mj-affirmations" rows="3" placeholder="Ik ben..." class="form-textarea"></textarea>
+            </div>
+        </div>
+
+        <button class="btn btn-primary mt-16" onclick="FiveMJ.save5MJ()">Bewaar</button>
+    </div>
+
+    <!-- PAGE: DAILY REVIEW (laag 3) -->
+    <div class="page" id="5mj-page-daily">
+        <div class="back-btn-wrap">
+            <button class="back-btn" onclick="FiveMJ.showPage('home')">&larr; Terug</button>
+        </div>
+        <div class="month-nav">
+            <button onclick="FiveMJ.prevDayDR()">&#8249;</button>
+            <span class="month-title" id="dr-nav-date">Vandaag</span>
+            <button onclick="FiveMJ.nextDayDR()">&#8250;</button>
+        </div>
+
+        <div class="section-title">Hoe was je dag? Wat heb je gedaan?</div>
+        <div class="list">
+            <div style="padding: 12px 16px;">
+                <textarea id="dr-dag" rows="4" placeholder="Beschrijf je dag..." class="form-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="section-title">Wat gaf je energie vandaag?</div>
+        <div class="list">
+            <div style="padding: 12px 16px;">
+                <textarea id="dr-energie-plus" rows="3" placeholder="Wat gaf je energie..." class="form-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="section-title">Wat kostte energie vandaag?</div>
+        <div class="list">
+            <div style="padding: 12px 16px;">
+                <textarea id="dr-energie-min" rows="3" placeholder="Wat kostte je energie..." class="form-textarea"></textarea>
+            </div>
+        </div>
+
+        <div class="section-title">Benoem 3 hoogtepunten</div>
+        <div class="list">
+            <div style="padding: 12px 16px;">
+                <div class="form-group" style="margin-bottom:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:600;color:var(--text2);font-size:14px;">1.</span>
+                        <input type="text" id="dr-hoogtepunt-1" placeholder="Bijv. geleerd, dankbaar, bereikt..." style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:var(--card);color:var(--text);outline:none;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:600;color:var(--text2);font-size:14px;">2.</span>
+                        <input type="text" id="dr-hoogtepunt-2" placeholder="Bijv. geleerd, dankbaar, bereikt..." style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:var(--card);color:var(--text);outline:none;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-weight:600;color:var(--text2);font-size:14px;">3.</span>
+                        <input type="text" id="dr-hoogtepunt-3" placeholder="Bijv. geleerd, dankbaar, bereikt..." style="flex:1;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:16px;background:var(--card);color:var(--text);outline:none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary mt-16" onclick="FiveMJ.saveDailyReview()">Bewaar</button>
+    </div>
+
+    <!-- PAGE: WEEKLY REVIEW (laag 3) -->
+    <div class="page" id="5mj-page-weekly">
+        <div class="back-btn-wrap">
+            <button class="back-btn" onclick="FiveMJ.showPage('home')">&larr; Terug</button>
+        </div>
+        <div class="section-title">Weekly Review</div>
+        <div class="subtitle" id="review-last-completed" style="margin-bottom: 12px;"></div>
+
+        <div class="list" id="wr-checklist">
+            <label class="wr-item" data-key="mailboxen">
+                <input type="checkbox" onchange="WeeklyReview.toggle('mailboxen')">
+                <span class="wr-item-icon">&#128233;</span>
+                <span class="wr-item-label">Mailboxen bijwerken</span>
+            </label>
+            <label class="wr-item" data-key="notities">
+                <input type="checkbox" onchange="WeeklyReview.toggle('notities')">
+                <span class="wr-item-icon">&#128221;</span>
+                <span class="wr-item-label">Notities bijwerken</span>
+            </label>
+            <label class="wr-item" data-key="whatsapp">
+                <input type="checkbox" onchange="WeeklyReview.toggle('whatsapp')">
+                <span class="wr-item-icon">&#128172;</span>
+                <span class="wr-item-label">Whatsapp checken &amp; opschonen</span>
+            </label>
+            <label class="wr-item" data-key="takenlijsten">
+                <input type="checkbox" onchange="WeeklyReview.toggle('takenlijsten')">
+                <span class="wr-item-icon">&#9745;</span>
+                <span class="wr-item-label">Takenlijsten bijwerken</span>
+            </label>
+            <label class="wr-item" data-key="fotorol">
+                <input type="checkbox" onchange="WeeklyReview.toggle('fotorol')">
+                <span class="wr-item-icon">&#128247;</span>
+                <span class="wr-item-label">Fotorol bijwerken</span>
+            </label>
+            <label class="wr-item" data-key="admin">
+                <input type="checkbox" onchange="WeeklyReview.toggle('admin')">
+                <span class="wr-item-icon">&#128188;</span>
+                <span class="wr-item-label">Admin bijwerken</span>
+            </label>
+            <label class="wr-item" data-key="plannen">
+                <input type="checkbox" onchange="WeeklyReview.toggle('plannen')">
+                <span class="wr-item-icon">&#128197;</span>
+                <span class="wr-item-label">Plannen taken en SC</span>
+            </label>
+            <label class="wr-item" data-key="review">
+                <input type="checkbox" onchange="WeeklyReview.toggle('review')">
+                <span class="wr-item-icon">&#128270;</span>
+                <span class="wr-item-label">Review week</span>
+            </label>
+            <label class="wr-item" data-key="lezen">
+                <input type="checkbox" onchange="WeeklyReview.toggle('lezen')">
+                <span class="wr-item-icon">&#128214;</span>
+                <span class="wr-item-label">Lezen</span>
+            </label>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="wr-progress" id="wr-progress">
+            <div class="wr-progress-bar">
+                <div class="wr-progress-fill" id="wr-progress-fill"></div>
+            </div>
+            <div class="wr-progress-text" id="wr-progress-text">0 / 9</div>
+        </div>
+
+        <!-- REFRESH BUTTON -->
+        <button class="btn btn-primary mt-16" onclick="WeeklyReview.refresh()">
+            &#8635; Refresh
+        </button>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- WEEK SAMENVATTING                       -->
+        <!-- ═══════════════════════════════════════ -->
+        <div class="section-title" style="margin-top: 32px;">Weekoverzicht</div>
+
+        <!-- Week navigation -->
+        <div class="month-nav" id="wr-summary-nav" style="display:none;">
+            <button id="wr-summary-prev" onclick="WeeklyReview.prevSummaryWeek()">&#8249;</button>
+            <span class="month-title" id="wr-summary-nav-date">—</span>
+            <button id="wr-summary-next" onclick="WeeklyReview.nextSummaryWeek()">&#8250;</button>
+        </div>
+
+        <!-- Summary content (dynamically rendered) -->
+        <div id="wr-summary-container" class="wr-summary-container">
+            <div style="padding: 24px 16px; text-align: center; color: var(--muted);">
+                Nog geen weekoverzichten beschikbaar.<br>
+                <small>Wordt automatisch gegenereerd op maandag.</small>
+            </div>
+        </div>
+
+        <!-- Manual generate buttons -->
+        <div style="display: flex; gap: 8px; margin-top: 12px;">
+            <button class="btn btn-primary" style="flex:1;" onclick="WeeklyReview.generatePreviousWeek()">
+                Vorige week genereren
+            </button>
+            <button class="btn btn-primary" style="flex:1;" onclick="WeeklyReview.generateCurrentWeek()">
+                Deze week genereren
+            </button>
+        </div>
+
+    </div>
+
+    <!-- PAGE: MONTHLY REVIEW (laag 3) -->
+    <div class="page" id="5mj-page-monthly">
+        <div class="back-btn-wrap">
+            <button class="back-btn" onclick="FiveMJ.showPage('home')">&larr; Terug</button>
+        </div>
+        <div class="section-title">Monthly Review</div>
+        <div class="list">
+            <div style="padding: 24px 16px; text-align: center; color: var(--muted);">
+                Inhoud wordt nog toegevoegd.
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE: QUARTERLY REVIEW (laag 3) -->
+    <div class="page" id="5mj-page-quarterly">
+        <div class="back-btn-wrap">
+            <button class="back-btn" onclick="FiveMJ.showPage('home')">&larr; Terug</button>
+        </div>
+        <div class="section-title">Quarterly Review</div>
+        <div class="list">
+            <div style="padding: 24px 16px; text-align: center; color: var(--muted);">
+                Inhoud wordt nog toegevoegd.
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE: YEARLY REVIEW (laag 3) -->
+    <div class="page" id="5mj-page-yearly">
+        <div class="back-btn-wrap">
+            <button class="back-btn" onclick="FiveMJ.showPage('home')">&larr; Terug</button>
+        </div>
+        <div class="section-title">Yearly Review</div>
+        <div class="list">
+            <div style="padding: 24px 16px; text-align: center; color: var(--muted);">
+                Inhoud wordt nog toegevoegd.
+            </div>
+        </div>
+    </div>
+
+</div><!-- /panel-5mj -->
+
+<!-- ==============================================================
+     VIEW: QUICK ADD TAAK
+     ============================================================== -->
+<div class="app-panel panel-work" id="panel-work">
+
+    <!-- HEADER -->
+    <div class="header" id="work-header">
+        <div>
+            <h1>Taak toevoegen</h1>
+            <div class="subtitle" id="work-subtitle"></div>
+        </div>
+    </div>
+
+    <!-- FULL TASK FORM -->
+    <div class="wk-page active" id="wk-page-form">
+        <form id="wk-task-form" onsubmit="event.preventDefault(); WorkQuickAdd.saveTask();">
+            <div class="form-group">
+                <label>Werkwoord</label>
+                <select id="wk-verb">
+                    <option value="Bellen">Bellen</option>
+                    <option value="Mailen">Mailen</option>
+                    <option value="Lezen">Lezen</option>
+                    <option value="Schrijven">Schrijven</option>
+                    <option value="Bouwen">Bouwen</option>
+                    <option value="Onderzoeken">Onderzoeken</option>
+                    <option value="Bespreken">Bespreken</option>
+                    <option value="Plannen">Plannen</option>
+                    <option value="Reviewen">Reviewen</option>
+                    <option value="Inkopen">Inkopen</option>
+                    <option value="Anders">Anders</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Taakomschrijving</label>
+                <input type="text" id="wk-title" placeholder="Wat moet er gedaan worden?" required>
+            </div>
+            <div class="form-group">
+                <label>Notitie / Context</label>
+                <textarea id="wk-note" rows="2" class="form-textarea" placeholder="Waarom, gewenst resultaat, extra info..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Opdrachtgever</label>
+                <select id="wk-client" onchange="WorkQuickAdd.onClientChange()">
+                    <option value="">— Geen (Inbox) —</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Project</label>
+                <select id="wk-project">
+                    <option value="">— Geen —</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="wk-status" onchange="WorkQuickAdd.onStatusChange()">
+                    <option value="inbox">Inbox</option>
+                    <option value="gepland">Gepland</option>
+                    <option value="actief">Actief</option>
+                    <option value="wachten_op">Wachten op</option>
+                    <option value="ooit_misschien">Ooit/Misschien</option>
+                    <option value="afgerond">Afgerond</option>
+                </select>
+            </div>
+            <div class="form-group" id="wk-fg-waiting" style="display:none;">
+                <label>Wachten op (wie/wat)</label>
+                <input type="text" id="wk-waiting" placeholder="Op wie of wat wacht je?">
+            </div>
+            <div class="wk-toggle-row">
+                <label class="wk-toggle-label">
+                    <input type="checkbox" id="wk-important">
+                    <span>Belangrijk</span>
+                </label>
+                <label class="wk-toggle-label">
+                    <input type="checkbox" id="wk-urgent">
+                    <span>Urgent</span>
+                </label>
+                <label class="wk-toggle-label">
+                    <input type="checkbox" id="wk-nextaction">
+                    <span>Volgende actie</span>
+                </label>
+            </div>
+            <div class="form-group">
+                <label>Energie-niveau</label>
+                <select id="wk-energy">
+                    <option value="">— Niet ingesteld —</option>
+                    <option value="hoog">Hoog (deep work)</option>
+                    <option value="laag">Laag (routinewerk)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Deadline</label>
+                <input type="date" id="wk-deadline" onchange="WorkQuickAdd.onDeadlineChange()">
+            </div>
+            <div class="form-group" id="wk-fg-deadline-type" style="display:none;">
+                <label>Deadline-type</label>
+                <select id="wk-deadline-type">
+                    <option value="false">Zacht (eigen streefdatum)</option>
+                    <option value="true">Hard (extern opgelegd)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Tijdsinschatting</label>
+                <select id="wk-estimate">
+                    <option value="">— Niet ingesteld —</option>
+                    <option value="15">15 minuten</option>
+                    <option value="30">30 minuten</option>
+                    <option value="60">60 minuten</option>
+                    <option value="120">120+ minuten</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Context</label>
+                <select id="wk-context">
+                    <option value="">— Niet ingesteld —</option>
+                    <option value="@Kantoor">@Kantoor</option>
+                    <option value="@Thuis">@Thuis</option>
+                    <option value="@Onderweg">@Onderweg</option>
+                    <option value="@Computer">@Computer</option>
+                    <option value="@Telefoon">@Telefoon</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Herhalend</label>
+                <select id="wk-recurring">
+                    <option value="geen">Geen</option>
+                    <option value="dagelijks">Dagelijks</option>
+                    <option value="wekelijks">Wekelijks</option>
+                    <option value="tweewekelijks">Tweewekelijks</option>
+                    <option value="maandelijks">Maandelijks</option>
+                    <option value="kwartaal">Kwartaal</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Bewaar taak</button>
+                <button type="button" class="btn btn-danger" style="flex: 1;" onclick="WorkQuickAdd.resetForm()">Wis</button>
+            </div>
+        </form>
+
+        <!-- Confirmation message -->
+        <div id="wk-confirmation" style="display:none; text-align:center; padding: 16px; margin-top: 12px; background: rgba(52,199,89,0.1); border-radius: var(--radius); color: var(--green); font-weight: 600;">
+            ✅ Taak opgeslagen!
+        </div>
+
+        <!-- Link to Taakmanager -->
+        <div style="margin-top: 24px; text-align: center;">
+            <a href="../Taakmanager/index.html" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                Open Taakmanager &#8599;
+            </a>
+            <p style="font-size: 12px; color: var(--text2); margin-top: 8px;">Beheer al je taken en projecten op je computer</p>
+        </div>
+    </div>
+
+</div><!-- /panel-work -->
+
+</div><!-- /app-view -->
+
+<!-- Streak Celebration Toast -->
+<div class="streak-toast-overlay" id="streak-overlay" onclick="StreakCelebration.dismiss()"></div>
+<div class="streak-toast" id="streak-toast">
+    <div class="streak-toast-emoji" id="streak-emoji"></div>
+    <div class="streak-toast-title" id="streak-title"></div>
+    <div class="streak-toast-sub" id="streak-sub"></div>
+    <button class="streak-toast-btn" onclick="StreakCelebration.dismiss()">Geweldig!</button>
+</div>
+
+<!-- Scripts -->
+<script src="js/db.js?v=5"></script>
+<script src="js/export.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
+<script src="js/habits-db.js?v=5"></script>
+<script src="js/habits-app.js?v=5"></script>
+<script src="js/streak-celebration.js?v=5"></script>
+<script src="js/weekly-review.js?v=5"></script>
+<script src="js/5mj-app.js?v=5"></script>
+<script src="js/work-db.js?v=5"></script>
+<script src="js/work-quick-add.js?v=5"></script>
+<script src="js/homepage.js?v=5"></script>
+<script src="js/layout.js?v=5"></script>
+
+</body>
+</html>

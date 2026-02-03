@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RHLOS Icon Generator</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .icon-preview { display: inline-block; margin: 10px; text-align: center; }
+        canvas { border: 1px solid #333; border-radius: 8px; }
+        button { background: #00d4aa; color: black; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 20px 0; }
+        button:hover { background: #00a896; }
+        h1 { color: #00d4aa; }
+        p { color: #888; }
+    </style>
+</head>
+<body>
+    <h1>RHLOS Icon Generator</h1>
+    <p>Klik op de knop om alle iconen te downloaden. Safari op macOS werkt het beste.</p>
+    <button onclick="downloadAll()">Download alle iconen</button>
+    <div id="previews"></div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+        function drawIcon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 512;
+
+            // Background gradient
+            const bgGrad = ctx.createLinearGradient(0, 0, size, size);
+            bgGrad.addColorStop(0, '#1a1a2e');
+            bgGrad.addColorStop(1, '#0a0a0a');
+
+            // Draw rounded rect background
+            const radius = 96 * scale;
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, radius);
+            ctx.fillStyle = bgGrad;
+            ctx.fill();
+
+            // Accent gradient
+            const accentGrad = ctx.createLinearGradient(0, 0, size, size);
+            accentGrad.addColorStop(0, '#00d4aa');
+            accentGrad.addColorStop(1, '#00a896');
+
+            // Draw R letter
+            ctx.fillStyle = accentGrad;
+            ctx.beginPath();
+
+            // Scale all coordinates
+            const s = scale;
+
+            // R path
+            ctx.moveTo(160*s, 120*s);
+            ctx.lineTo(160*s, 392*s);
+            ctx.lineTo(200*s, 392*s);
+            ctx.lineTo(200*s, 280*s);
+            ctx.lineTo(260*s, 280*s);
+            ctx.lineTo(320*s, 392*s);
+            ctx.lineTo(368*s, 392*s);
+            ctx.lineTo(300*s, 268*s);
+
+            // Curve for R top
+            ctx.quadraticCurveTo(360*s, 252*s, 360*s, 176*s);
+            ctx.quadraticCurveTo(360*s, 120*s, 280*s, 120*s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner part of R (hole)
+            ctx.fillStyle = bgGrad;
+            ctx.beginPath();
+            ctx.moveTo(200*s, 160*s);
+            ctx.lineTo(270*s, 160*s);
+            ctx.quadraticCurveTo(320*s, 160*s, 320*s, 200*s);
+            ctx.quadraticCurveTo(320*s, 240*s, 270*s, 240*s);
+            ctx.lineTo(200*s, 240*s);
+            ctx.closePath();
+            ctx.fill();
+
+            // Decorative dot
+            ctx.fillStyle = accentGrad;
+            ctx.globalAlpha = 0.6;
+            ctx.beginPath();
+            ctx.arc(400*s, 400*s, 24*s, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+
+        function createPreviews() {
+            const container = document.getElementById('previews');
+            sizes.forEach(size => {
+                const div = document.createElement('div');
+                div.className = 'icon-preview';
+
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                canvas.id = `icon-${size}`;
+                drawIcon(canvas, size);
+
+                const label = document.createElement('div');
+                label.textContent = `${size}x${size}`;
+
+                div.appendChild(canvas);
+                div.appendChild(label);
+                container.appendChild(div);
+            });
+        }
+
+        function downloadAll() {
+            sizes.forEach((size, index) => {
+                setTimeout(() => {
+                    const canvas = document.getElementById(`icon-${size}`);
+                    const link = document.createElement('a');
+                    link.download = `icon-${size}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }, index * 200);
+            });
+        }
+
+        createPreviews();
+    </script>
+</body>
+</html>

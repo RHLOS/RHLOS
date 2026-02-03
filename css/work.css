@@ -1,0 +1,88 @@
+/* ============================================================
+   work.css — Styles for Quick Add Taak in RHLOS
+   ============================================================ */
+
+/* --- Pages --- */
+.wk-page {
+    display: none;
+    padding: 16px 20px 20px;
+}
+.wk-page.active {
+    display: block;
+}
+
+/* --- Quick Add Bar --- */
+.wk-quick-add {
+    display: flex;
+    gap: 8px;
+    margin: 12px 0;
+}
+.wk-quick-select {
+    padding: 10px 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    background: var(--card);
+    color: var(--text);
+    min-width: 100px;
+    outline: none;
+}
+.wk-quick-select:focus {
+    border-color: var(--accent);
+}
+.wk-quick-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 16px;
+    background: var(--card);
+    color: var(--text);
+    outline: none;
+}
+.wk-quick-input:focus {
+    border-color: var(--accent);
+}
+.wk-quick-btn {
+    padding: 10px 16px !important;
+    font-size: 18px !important;
+    min-width: 44px;
+    border-radius: 10px !important;
+}
+
+/* --- Toggle row (checkboxes) --- */
+.wk-toggle-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    margin-bottom: 12px;
+}
+.wk-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    color: var(--text);
+    cursor: pointer;
+}
+.wk-toggle-label span {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+}
+.wk-toggle-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--accent);
+}
+
+/* --- Theme support --- */
+body[class*="theme-"] .wk-toggle-label span {
+    color: rgba(255,255,255,0.5);
+}
+.theme-night .wk-quick-select,
+.theme-night .wk-quick-input {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.12);
+    color: #f0f0f0;
+}
