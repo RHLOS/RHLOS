@@ -8,7 +8,8 @@ const OVApp = (() => {
 
     // ── Config ──────────────────────────────────────────────────────
     const STOPS = ['30003167', '30003061', '30003060'];
-    const API_URL = `https://v0.ovapi.nl/tpc/${STOPS.join(',')}/departures`;
+    const OV_API = `http://v0.ovapi.nl/tpc/${STOPS.join(',')}/departures`;
+    const API_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(OV_API)}`;
     const REFRESH_INTERVAL = 30000; // 30 seconds
     const MAX_DEPARTURES = 3;       // per line+direction
 
