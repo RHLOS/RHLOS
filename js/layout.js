@@ -27,12 +27,15 @@ const Layout = (() => {
         if (appName === '5mj') FiveMJ.showPage('home');
         if (appName === 'health') App.showPage('home');
         if (appName === 'work') WorkQuickAdd.render();
+        if (appName === 'ov') OVApp.render();
 
         // Scroll to top
         window.scrollTo(0, 0);
     }
 
     function goHome() {
+        // Stop OV auto-refresh when leaving
+        if (currentApp === 'ov' && typeof OVApp !== 'undefined') OVApp.destroy();
         currentApp = null;
 
         // Hide app view container, show launcher
@@ -68,6 +71,7 @@ const Layout = (() => {
         WeeklyReview.render();
         FiveMJ.init();
         WorkQuickAdd.init();
+        OVApp.init();
         Homepage.init();
 
         // Register Service Worker for PWA

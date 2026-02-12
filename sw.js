@@ -2,7 +2,7 @@
 // Service Worker for RHLOS PWA
 // ============================================================
 
-const CACHE_NAME = 'rhlos-v8';
+const CACHE_NAME = 'rhlos-v9';
 const OFFLINE_URL = './';
 
 // Files to cache for offline use (relative paths for GitHub Pages compatibility)
@@ -24,6 +24,8 @@ const STATIC_ASSETS = [
     './js/layout.js',
     './js/work-quick-add.js',
     './js/streak-celebration.js',
+    './js/ov-app.js',
+    './css/ov.css',
     './manifest.json',
     './icons/icon-192.png',
     './icons/icon-512.png'

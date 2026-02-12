@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="css/style.css?v=5">
     <link rel="stylesheet" href="css/habits.css?v=5">
     <link rel="stylesheet" href="css/work.css?v=5">
+    <link rel="stylesheet" href="css/ov.css?v=1">
 </head>
 <body>
 
@@ -136,6 +137,10 @@
             <div class="launcher-icon">💼</div>
             <div class="launcher-label">Quick Task</div>
         </div>
+        <div class="launcher-card" onclick="Layout.openApp('ov')">
+            <div class="launcher-icon">🚊</div>
+            <div class="launcher-label">OV Vertrek</div>
+        </div>
         <div class="launcher-card">
             <div class="launcher-icon">📝</div>
             <div class="launcher-label">Notes</div>
@@ -165,6 +170,9 @@
     </button>
     <button class="app-nav-btn" data-app="work" onclick="Layout.openApp('work')">
         <span class="app-nav-icon">💼</span>Tasks
+    </button>
+    <button class="app-nav-btn" data-app="ov" onclick="Layout.openApp('ov')">
+        <span class="app-nav-icon">🚊</span>OV
     </button>
 </nav>
 
@@ -1174,6 +1182,30 @@
 
 </div><!-- /panel-work -->
 
+<!-- ==============================================================
+     VIEW: OV VERTREKTIJDEN
+     ============================================================== -->
+<div class="app-panel panel-ov" id="panel-ov">
+
+    <!-- HEADER -->
+    <div class="header" id="ov-header">
+        <div>
+            <h1>OV Vertrektijden</h1>
+            <div class="subtitle">Bos en Lommerplein</div>
+        </div>
+    </div>
+
+    <!-- DEPARTURES BOARD -->
+    <div class="ov-location">
+        <div class="ov-location-name">Bos en Lommerplein, Amsterdam</div>
+    </div>
+
+    <div id="ov-departures" style="padding: 0 16px;"></div>
+
+    <div class="ov-timestamp" id="ov-timestamp"></div>
+
+</div><!-- /panel-ov -->
+
 </div><!-- /app-view -->
 
 <!-- Streak Celebration Toast -->
@@ -1206,6 +1238,7 @@
 <script src="js/5mj-app.js?v=5"></script>
 <script src="js/work-db.js?v=5"></script>
 <script src="js/work-quick-add.js?v=5"></script>
+<script src="js/ov-app.js?v=1"></script>
 <script src="js/homepage.js?v=5"></script>
 <script src="js/layout.js?v=5"></script>
 

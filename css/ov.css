@@ -1,0 +1,297 @@
+/* ===================================================================
+   OV Vertrektijden – Styles
+   =================================================================== */
+
+/* ── Line Groups ─────────────────────────────────────────────────── */
+
+.ov-line-group {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+.ov-line-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.ov-line-icon {
+    font-size: 1.3em;
+}
+
+.ov-line-name {
+    font-weight: 700;
+    font-size: 1.05em;
+    color: var(--text);
+}
+
+/* ── Direction ───────────────────────────────────────────────────── */
+
+.ov-direction {
+    margin-bottom: 10px;
+}
+
+.ov-direction:last-child {
+    margin-bottom: 0;
+}
+
+.ov-direction-label {
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--text2);
+    margin-bottom: 6px;
+    padding-left: 2px;
+}
+
+/* ── Departure Times ─────────────────────────────────────────────── */
+
+.ov-times {
+    display: flex;
+    gap: 8px;
+}
+
+.ov-departure {
+    flex: 1;
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 10px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+    transition: transform 0.15s ease;
+}
+
+.ov-dep-countdown {
+    display: block;
+    font-size: 1.2em;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+}
+
+.ov-dep-time {
+    display: block;
+    font-size: 0.72em;
+    color: var(--text2);
+    margin-top: 2px;
+}
+
+.ov-dep-status {
+    display: block;
+    font-size: 0.68em;
+    font-weight: 600;
+    margin-top: 3px;
+    border-radius: 4px;
+    padding: 1px 4px;
+}
+
+/* Status colors */
+.ov-on-time .ov-dep-countdown {
+    color: #34c759;
+}
+
+.ov-delayed .ov-dep-countdown {
+    color: #ff3b30;
+}
+.ov-delayed .ov-dep-status {
+    color: #ff3b30;
+}
+
+.ov-early .ov-dep-countdown {
+    color: #ff9500;
+}
+.ov-early .ov-dep-status {
+    color: #ff9500;
+}
+
+/* ── Timestamp ───────────────────────────────────────────────────── */
+
+.ov-timestamp {
+    text-align: center;
+    font-size: 0.75em;
+    color: var(--text2);
+    padding: 12px 0 20px;
+}
+
+/* ── Loading State ───────────────────────────────────────────────── */
+
+.ov-loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+}
+
+.ov-loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    animation: ov-spin 0.8s linear infinite;
+}
+
+@keyframes ov-spin {
+    to { transform: rotate(360deg); }
+}
+
+.ov-loading p {
+    font-size: 0.9em;
+    margin: 0;
+}
+
+/* ── Empty State ─────────────────────────────────────────────────── */
+
+.ov-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+}
+
+.ov-empty-icon {
+    font-size: 2.5em;
+    margin-bottom: 12px;
+}
+
+.ov-empty p {
+    font-size: 0.95em;
+    margin: 0;
+}
+
+/* ── Error State ─────────────────────────────────────────────────── */
+
+.ov-error {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+}
+
+.ov-error-icon {
+    font-size: 2.5em;
+    margin-bottom: 12px;
+}
+
+.ov-error p {
+    font-size: 0.95em;
+    margin: 0 0 16px;
+}
+
+.ov-retry-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 24px;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.ov-retry-btn:active {
+    opacity: 0.8;
+}
+
+/* ── Location Header ─────────────────────────────────────────────── */
+
+.ov-location {
+    text-align: center;
+    padding: 8px 16px 4px;
+}
+
+.ov-location-name {
+    font-size: 0.82em;
+    font-weight: 600;
+    color: var(--text2);
+}
+
+.ov-location-name::before {
+    content: '📍 ';
+}
+
+
+/* =================================================================
+   THEME OVERRIDES — Dark forest mode
+   ================================================================= */
+
+body[class*="theme-"] .ov-line-group {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+
+body[class*="theme-"] .ov-line-header {
+    border-bottom-color: rgba(255,255,255,0.12);
+}
+
+body[class*="theme-"] .ov-line-name {
+    color: rgba(255,255,255,0.9);
+}
+
+body[class*="theme-"] .ov-direction-label {
+    color: rgba(255,255,255,0.55);
+}
+
+body[class*="theme-"] .ov-departure {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.08);
+}
+
+body[class*="theme-"] .ov-dep-countdown {
+    color: rgba(255,255,255,0.9);
+}
+
+body[class*="theme-"] .ov-on-time .ov-dep-countdown {
+    color: #6fcf7c;
+}
+
+body[class*="theme-"] .ov-delayed .ov-dep-countdown {
+    color: #ff6961;
+}
+
+body[class*="theme-"] .ov-delayed .ov-dep-status {
+    color: #ff6961;
+}
+
+body[class*="theme-"] .ov-early .ov-dep-countdown {
+    color: #ffb347;
+}
+
+body[class*="theme-"] .ov-early .ov-dep-status {
+    color: #ffb347;
+}
+
+body[class*="theme-"] .ov-dep-time {
+    color: rgba(255,255,255,0.4);
+}
+
+body[class*="theme-"] .ov-timestamp {
+    color: rgba(255,255,255,0.4);
+}
+
+body[class*="theme-"] .ov-location-name {
+    color: rgba(255,255,255,0.5);
+}
+
+body[class*="theme-"] .ov-loading,
+body[class*="theme-"] .ov-empty,
+body[class*="theme-"] .ov-error {
+    color: rgba(255,255,255,0.5);
+}
+
+body[class*="theme-"] .ov-loading-spinner {
+    border-color: rgba(255,255,255,0.15);
+    border-top-color: #6fcf7c;
+}
+
+body[class*="theme-"] .ov-retry-btn {
+    background: #6fcf7c;
+    color: #0a1a0f;
+}
