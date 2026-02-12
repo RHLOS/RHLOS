@@ -206,6 +206,10 @@ const DB = (() => {
         const days = _getDays();
         days[dayEntry.date] = dayEntry;
         _saveDays(days);
+        // Sync to Firestore
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('health_days', dayEntry.date, dayEntry);
+        }
     }
 
     function getAllDays() {
@@ -457,6 +461,12 @@ const DB = (() => {
         _set('hl_sessions', sessions);
     }
 
+    function _syncSession(session) {
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('health_sessions', session.id, session);
+        }
+    }
+
     function startSession(templateId) {
         const template = getTemplate(templateId);
         if (!template) return null;
@@ -482,6 +492,7 @@ const DB = (() => {
         const sessions = _getSessions();
         sessions.push(session);
         _saveSessions(sessions);
+        _syncSession(session);
         return session;
     }
 
@@ -498,6 +509,7 @@ const DB = (() => {
             sessions.push(session);
         }
         _saveSessions(sessions);
+        _syncSession(session);
     }
 
     function completeSession(id) {
@@ -512,6 +524,10 @@ const DB = (() => {
     function deleteSession(id) {
         const sessions = _getSessions().filter(s => s.id !== id);
         _saveSessions(sessions);
+        // Delete from Firestore
+        if (typeof Sync !== 'undefined' && Sync.deleteDocument) {
+            Sync.deleteDocument('health_sessions', id);
+        }
     }
 
     function getSessionsForDate(dateStr) {
