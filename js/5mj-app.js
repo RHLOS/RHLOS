@@ -60,6 +60,12 @@ const FiveMJ = (() => {
         }
     }
 
+    function syncEntry(dateStr, entry) {
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('journal', '5mj_' + dateStr, { type: '5mj', date: dateStr, ...entry });
+        }
+    }
+
     // --- Page navigation ---
 
     function showPage(pageId) {
@@ -113,14 +119,16 @@ const FiveMJ = (() => {
 
     function save5MJ() {
         const data = loadAll();
-        data[dateKey(currentDate)] = {
+        const entry = {
             grateful: document.getElementById('5mj-grateful').value.trim(),
             great1: document.getElementById('5mj-great-1').value.trim(),
             great2: document.getElementById('5mj-great-2').value.trim(),
             great3: document.getElementById('5mj-great-3').value.trim(),
             affirmations: document.getElementById('5mj-affirmations').value.trim()
         };
+        data[dateKey(currentDate)] = entry;
         saveAll(data);
+        syncEntry(dateKey(currentDate), entry);
 
         // Auto-check "5MJ" habit in Habit Tracker
         autoCheck5MJHabit();
@@ -186,6 +194,12 @@ const FiveMJ = (() => {
         }
     }
 
+    function syncDREntry(dateStr, entry) {
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('journal', 'dr_' + dateStr, { type: 'daily_review', date: dateStr, ...entry });
+        }
+    }
+
     // --- Daily Review load & save ---
 
     function loadDailyReview() {
@@ -202,7 +216,7 @@ const FiveMJ = (() => {
 
     function saveDailyReview() {
         const data = loadAllDR();
-        data[dateKey(drDate)] = {
+        const entry = {
             dag: document.getElementById('dr-dag').value.trim(),
             energiePlus: document.getElementById('dr-energie-plus').value.trim(),
             energieMin: document.getElementById('dr-energie-min').value.trim(),
@@ -210,7 +224,9 @@ const FiveMJ = (() => {
             hoogtepunt2: document.getElementById('dr-hoogtepunt-2').value.trim(),
             hoogtepunt3: document.getElementById('dr-hoogtepunt-3').value.trim(),
         };
+        data[dateKey(drDate)] = entry;
         saveAllDR(data);
+        syncDREntry(dateKey(drDate), entry);
 
         // Auto-check "Daily Review" habit in Habit Tracker
         autoCheckDailyReviewHabit();
