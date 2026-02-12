@@ -17,7 +17,8 @@ const OVApp = (() => {
     const LINES = {
         '7':  { type: 'TRAM', icon: '🚊', label: 'Tram 7' },
         '15': { type: 'BUS',  icon: '🚌', label: 'Bus 15' },
-        '21': { type: 'BUS',  icon: '🚌', label: 'Bus 21' }
+        '21': { type: 'BUS',  icon: '🚌', label: 'Bus 21' },
+        '80': { type: 'BUS',  icon: '🚌', label: 'Bus 80' }
     };
 
     // Friendly direction names
@@ -27,7 +28,9 @@ const OVApp = (() => {
         '15_1': 'Station Zuid',
         '15_2': 'Station Sloterdijk',
         '21_1': 'Geuzenveld',
-        '21_2': 'Centraal Station'
+        '21_2': 'Centraal Station',
+        '80_1': 'Zandvoort',
+        '80_2': 'Amsterdam Elandsgracht'
     };
 
     let _timer = null;
@@ -153,7 +156,7 @@ const OVApp = (() => {
         }
 
         // Render order: 7, 15, 21
-        const lineOrder = ['7', '15', '21'];
+        const lineOrder = ['7', '15', '21', '80'];
         let html = '';
 
         for (const line of lineOrder) {
