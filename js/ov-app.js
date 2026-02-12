@@ -29,8 +29,8 @@ const OVApp = (() => {
         '15_2': 'Station Sloterdijk',
         '21_1': 'Geuzenveld',
         '21_2': 'Centraal Station',
-        '80_1': 'Zandvoort',
-        '80_2': 'Amsterdam Elandsgracht'
+        '80_1': 'Amsterdam Elandsgracht',
+        '80_2': 'Zandvoort'
     };
 
     let _timer = null;
