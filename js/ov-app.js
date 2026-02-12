@@ -76,9 +76,12 @@ const OVApp = (() => {
 
         // data is keyed by TPC code
         for (const tpc of Object.keys(data)) {
-            const passes = data[tpc] || {};
+            const tpcData = data[tpc] || {};
+            // Passes can be under a "Passes" key or directly on the TPC object
+            const passes = tpcData.Passes || tpcData || {};
             for (const passId of Object.keys(passes)) {
                 const p = passes[passId];
+                if (!p || typeof p !== 'object' || !p.LinePublicNumber) continue;
                 const line = p.LinePublicNumber;
                 if (!LINES[line]) continue; // skip lines we don't care about
 
