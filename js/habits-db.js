@@ -79,6 +79,10 @@ const HabitsDB = (() => {
         };
         habits.push(habit);
         _set(HABITS_KEY, habits);
+        // Sync to Firestore
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('habits', habit.id, habit);
+        }
         return habit;
     }
 
@@ -88,6 +92,10 @@ const HabitsDB = (() => {
         if (idx === -1) return null;
         Object.assign(habits[idx], updates);
         _set(HABITS_KEY, habits);
+        // Sync to Firestore
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('habits', id, habits[idx]);
+        }
         return habits[idx];
     }
 
@@ -136,6 +144,10 @@ const HabitsDB = (() => {
         };
         all[dateStr].push(completion);
         _set(COMPLETIONS_KEY, all);
+        // Sync completions to Firestore
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('habits_completions', dateStr, { completions: all[dateStr] });
+        }
         return completion;
     }
 
@@ -143,7 +155,18 @@ const HabitsDB = (() => {
         const all = _getCompletionsRaw();
         if (!all[dateStr]) return;
         all[dateStr] = all[dateStr].filter(c => c.id !== completionId);
-        if (all[dateStr].length === 0) delete all[dateStr];
+        if (all[dateStr].length === 0) {
+            delete all[dateStr];
+            // Delete from Firestore
+            if (typeof Sync !== 'undefined' && Sync.deleteDocument) {
+                Sync.deleteDocument('habits_completions', dateStr);
+            }
+        } else {
+            // Update Firestore
+            if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+                Sync.saveDocument('habits_completions', dateStr, { completions: all[dateStr] });
+            }
+        }
         _set(COMPLETIONS_KEY, all);
     }
 
@@ -153,7 +176,18 @@ const HabitsDB = (() => {
         const idx = all[dateStr].findLastIndex(c => c.habitId === habitId);
         if (idx !== -1) {
             all[dateStr].splice(idx, 1);
-            if (all[dateStr].length === 0) delete all[dateStr];
+            if (all[dateStr].length === 0) {
+                delete all[dateStr];
+                // Delete from Firestore
+                if (typeof Sync !== 'undefined' && Sync.deleteDocument) {
+                    Sync.deleteDocument('habits_completions', dateStr);
+                }
+            } else {
+                // Update Firestore
+                if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+                    Sync.saveDocument('habits_completions', dateStr, { completions: all[dateStr] });
+                }
+            }
             _set(COMPLETIONS_KEY, all);
         }
     }
