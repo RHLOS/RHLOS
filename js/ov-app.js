@@ -9,7 +9,12 @@ const OVApp = (() => {
     // ── Config ──────────────────────────────────────────────────────
     const STOPS = ['30003167', '30003061', '30003060'];
     const OV_API = `http://v0.ovapi.nl/tpc/${STOPS.join(',')}/departures`;
-    const API_URL = `https://api.allorigins.win/raw?url=${encodeURIComponent(OV_API)}`;
+    // Multiple CORS proxies for reliability (fallback chain)
+    const PROXY_URLS = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(OV_API)}`,
+        `https://corsproxy.org/?url=${encodeURIComponent(OV_API)}`,
+        `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(OV_API)}`
+    ];
     const REFRESH_INTERVAL = 30000; // 30 seconds
     const MAX_DEPARTURES = 3;       // per line+direction
 
@@ -60,16 +65,27 @@ const OVApp = (() => {
         const container = document.getElementById('ov-departures');
         if (!container) return;
 
-        try {
-            const resp = await fetch(API_URL);
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const data = await resp.json();
+        // Try each proxy until one works
+        for (let i = 0; i < PROXY_URLS.length; i++) {
+            try {
+                const resp = await fetch(PROXY_URLS[i]);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
 
-            _departures = _parseDepartures(data);
-            _lastFetch = new Date();
+                _departures = _parseDepartures(data);
+                _lastFetch = new Date();
+                _render(container);
+                return; // success, stop trying
+            } catch (err) {
+                console.warn(`[OV] Proxy ${i + 1} failed:`, err.message);
+            }
+        }
+
+        // All proxies failed — keep showing last data if available
+        if (_departures.length > 0) {
+            console.warn('[OV] All proxies failed, showing cached data');
             _render(container);
-        } catch (err) {
-            console.warn('[OV] Fetch failed:', err.message);
+        } else {
             _showError(container);
         }
     }
