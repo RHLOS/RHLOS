@@ -333,3 +333,90 @@
 .ht-table-check:active {
     transform: scale(0.85);
 }
+
+/* ============================================================
+   THEME OVERRIDES — Dark forest mode
+   ============================================================ */
+
+/* Week table header */
+body[class*="theme-"] .ht-week-header {
+    background: rgba(255,255,255,0.06);
+}
+
+/* Today column highlight */
+body[class*="theme-"] .ht-today-col {
+    background: rgba(111,207,124,0.1);
+}
+
+/* Calendar partial cells */
+body[class*="theme-"] .ht-calendar-grid .day-cell.partial {
+    background: rgba(255,149,0,0.25);
+    color: #ffb84d;
+}
+
+/* Calendar today ring */
+body[class*="theme-"] .ht-calendar-grid .day-cell.today {
+    box-shadow: inset 0 0 0 2px #6fcf7c;
+}
+
+/* Calendar day cells text */
+body[class*="theme-"] .ht-calendar-grid .day-cell {
+    color: rgba(255,255,255,0.85);
+}
+body[class*="theme-"] .ht-calendar-grid .day-cell.future {
+    color: rgba(255,255,255,0.3);
+}
+body[class*="theme-"] .ht-calendar-grid .day-header {
+    color: rgba(255,255,255,0.5);
+}
+
+/* Habit filter buttons */
+body[class*="theme-"] .ht-habit-filter button {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.6);
+}
+body[class*="theme-"] .ht-habit-filter button.active {
+    background: #6fcf7c;
+    border-color: #6fcf7c;
+    color: #0a1a0f;
+}
+
+/* Stat pills */
+body[class*="theme-"] .ht-stat-pill {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.7);
+}
+
+/* Bar chart labels */
+body[class*="theme-"] .ht-bar-chart .bar-label {
+    color: rgba(255,255,255,0.5);
+}
+body[class*="theme-"] .ht-bar-chart .bar-label.bar-today {
+    color: #6fcf7c;
+}
+
+/* Mini week (habit detail) */
+body[class*="theme-"] .ht-mini-day {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+}
+
+/* Icon picker */
+body[class*="theme-"] .icon-picker button {
+    background: rgba(255,255,255,0.08);
+}
+body[class*="theme-"] .icon-picker button.selected {
+    background: rgba(111,207,124,0.2);
+    border-color: #6fcf7c;
+}
+
+/* Color picker selected ring */
+body[class*="theme-"] .color-picker button.selected {
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.3), 0 0 0 4px #ffffff;
+}
+
+/* Table check border */
+body[class*="theme-"] .ht-table-check {
+    border-color: rgba(255,255,255,0.2);
+}

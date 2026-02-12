@@ -77,12 +77,19 @@
 }
 
 /* --- Theme support --- */
+body[class*="theme-"] .wk-toggle-label {
+    color: rgba(255,255,255,0.85);
+}
 body[class*="theme-"] .wk-toggle-label span {
     color: rgba(255,255,255,0.5);
 }
-.theme-night .wk-quick-select,
-.theme-night .wk-quick-input {
+body[class*="theme-"] .wk-quick-select,
+body[class*="theme-"] .wk-quick-input {
     background: rgba(255,255,255,0.08);
     border-color: rgba(255,255,255,0.12);
     color: #f0f0f0;
+}
+body[class*="theme-"] .wk-quick-select:focus,
+body[class*="theme-"] .wk-quick-input:focus {
+    border-color: #6fcf7c;
 }

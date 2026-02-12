@@ -506,22 +506,30 @@ body[class*="theme-"] .settings-value {
 body[class*="theme-"] .app-panel {
     color: rgba(255,255,255,0.85);
 }
-/* Habit Tracker week-table — keep white background with dark text */
+/* Habit Tracker week-table — glassmorphism in themed mode */
 body[class*="theme-"] .ht-week-table {
-    color: #1c1c1e;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    color: rgba(255,255,255,0.85);
 }
 body[class*="theme-"] .ht-week-table .ht-habit-name {
-    color: #1c1c1e;
+    color: #ffffff;
 }
 body[class*="theme-"] .ht-week-table .ht-day-label {
-    color: #8e8e93;
+    color: rgba(255,255,255,0.5);
 }
 body[class*="theme-"] .ht-week-table .ht-day-num {
-    color: #1c1c1e;
+    color: rgba(255,255,255,0.85);
 }
 body[class*="theme-"] .ht-week-table .ht-today-col .ht-day-label,
 body[class*="theme-"] .ht-week-table .ht-today-col .ht-day-num {
-    color: #007aff;
+    color: #6fcf7c;
+}
+body[class*="theme-"] .ht-week-row {
+    border-bottom-color: rgba(255,255,255,0.06);
 }
 
 /* Cards — glassmorphism in themed mode */
@@ -606,6 +614,14 @@ body[class*="theme-"] .page .form-group select {
 }
 body[class*="theme-"] .page .form-group input:focus,
 body[class*="theme-"] .page .form-group select:focus {
+    border-color: #6fcf7c;
+}
+body[class*="theme-"] .page .form-textarea {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.12);
+    color: #ffffff;
+}
+body[class*="theme-"] .page .form-textarea:focus {
     border-color: #6fcf7c;
 }
 
@@ -938,6 +954,18 @@ body[class*="theme-"] .modal .list-item .item-chevron {
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     margin: 2px;
 }
+/* Segment control — themed */
+body[class*="theme-"] .segment-control {
+    background: rgba(255,255,255,0.1);
+}
+body[class*="theme-"] .segment-control button {
+    color: rgba(255,255,255,0.5);
+}
+body[class*="theme-"] .segment-control button.active {
+    background: rgba(255,255,255,0.2);
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
 
 /* --- Workout Log --- */
 .exercise-section {
@@ -1115,6 +1143,16 @@ body[class*="theme-"] .modal .list-item .item-chevron {
 }
 .wr-item:last-child { border-bottom: none; }
 .wr-item:active { background: #f0f0f5; }
+/* Weekly review — themed */
+body[class*="theme-"] .wr-item:active {
+    background: rgba(255,255,255,0.08);
+}
+body[class*="theme-"] .wr-item-label {
+    color: #ffffff;
+}
+body[class*="theme-"] .wr-item {
+    border-bottom-color: rgba(255,255,255,0.06);
+}
 .wr-item input[type="checkbox"] {
     width: 22px;
     height: 22px;
@@ -1258,6 +1296,46 @@ body[class*="theme-"] .modal .list-item .item-chevron {
     border-radius: 3px;
     overflow: hidden;
     flex-shrink: 0;
+}
+/* Weekly review summary — themed */
+body[class*="theme-"] .wr-summary-card {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.1);
+}
+body[class*="theme-"] .wr-summary-card-title {
+    color: rgba(255,255,255,0.5);
+}
+body[class*="theme-"] .wr-summary-card-value {
+    color: #ffffff;
+}
+body[class*="theme-"] .wr-summary-card-sub {
+    color: rgba(255,255,255,0.5);
+}
+body[class*="theme-"] .wr-summary-overall {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.1);
+}
+body[class*="theme-"] .wr-summary-overall-label {
+    color: rgba(255,255,255,0.85);
+}
+body[class*="theme-"] .wr-summary-section-title {
+    color: rgba(255,255,255,0.5);
+}
+body[class*="theme-"] .wr-habit-row {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.1);
+}
+body[class*="theme-"] .wr-habit-name {
+    color: #ffffff;
+}
+body[class*="theme-"] .wr-habit-bar {
+    background: rgba(255,255,255,0.15);
+}
+body[class*="theme-"] .wr-progress-bar {
+    background: rgba(255,255,255,0.15);
+}
+body[class*="theme-"] .wr-progress-text {
+    color: rgba(255,255,255,0.7);
 }
 .wr-habit-bar-fill {
     height: 100%;
