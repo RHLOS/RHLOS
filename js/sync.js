@@ -27,10 +27,10 @@ const Sync = (() => {
 
         updateSyncStatus('syncing');
 
-        // Upload local data first (one-time migration)
-        uploadLocalData()
+        // Check if this is the first sync (migration) or a returning user
+        migrateIfNeeded()
             .then(() => {
-                // Then start listening for changes
+                // Start listening for changes from Firestore
                 setupRealtimeListeners();
                 updateSyncStatus('synced');
             })
@@ -72,12 +72,28 @@ const Sync = (() => {
         statusEl.className = 'sync-status ' + state.class;
     }
 
-    // Upload all local data to Firestore (migration)
-    async function uploadLocalData() {
+    // Check if Firestore already has data; if not, upload local data (one-time migration)
+    async function migrateIfNeeded() {
         const db = getFirebaseDb();
         if (!db || !userId) return;
 
-        console.log('[Sync] Uploading local data...');
+        // Check if user already has data in Firestore by looking at the habits collection
+        const existingHabits = await db.collection('users').doc(userId)
+            .collection(COLLECTIONS.habits).limit(1).get();
+
+        if (!existingHabits.empty) {
+            console.log('[Sync] Firestore already has data, skipping migration');
+            return;
+        }
+
+        console.log('[Sync] First sync — uploading local data to Firestore...');
+        await uploadLocalData();
+    }
+
+    // Upload all local data to Firestore (one-time migration only)
+    async function uploadLocalData() {
+        const db = getFirebaseDb();
+        if (!db || !userId) return;
 
         const batch = db.batch();
         let operations = 0;
@@ -110,7 +126,7 @@ const Sync = (() => {
         }
 
         // Habits
-        const habits = JSON.parse(localStorage.getItem('habits_list') || '[]');
+        const habits = JSON.parse(localStorage.getItem('ht_habits') || '[]');
         for (const habit of habits) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.habits).doc(habit.id);
@@ -119,7 +135,7 @@ const Sync = (() => {
         }
 
         // Habits Completions
-        const habitsCompletions = JSON.parse(localStorage.getItem('habits_completions') || '{}');
+        const habitsCompletions = JSON.parse(localStorage.getItem('ht_completions') || '{}');
         for (const [dateKey, completions] of Object.entries(habitsCompletions)) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.habitsCompletions).doc(dateKey);
@@ -127,12 +143,21 @@ const Sync = (() => {
             operations++;
         }
 
-        // Journal (5MJ + Daily Review)
-        const journal = JSON.parse(localStorage.getItem('5mj_data') || '{}');
-        for (const [dateKey, entry] of Object.entries(journal)) {
+        // Journal - 5MJ entries
+        const journal5MJ = JSON.parse(localStorage.getItem('5mj_entries') || '{}');
+        for (const [dateKey, entry] of Object.entries(journal5MJ)) {
             const docRef = db.collection('users').doc(userId)
-                .collection(COLLECTIONS.journal).doc(dateKey);
-            batch.set(docRef, { ...entry, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                .collection(COLLECTIONS.journal).doc('5mj_' + dateKey);
+            batch.set(docRef, { type: '5mj', date: dateKey, ...entry, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            operations++;
+        }
+
+        // Journal - Daily Review entries
+        const journalDR = JSON.parse(localStorage.getItem('dr_entries') || '{}');
+        for (const [dateKey, entry] of Object.entries(journalDR)) {
+            const docRef = db.collection('users').doc(userId)
+                .collection(COLLECTIONS.journal).doc('dr_' + dateKey);
+            batch.set(docRef, { type: 'daily_review', date: dateKey, ...entry, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
             operations++;
         }
 
@@ -153,6 +178,13 @@ const Sync = (() => {
         }
     }
 
+    // Remove Firestore metadata fields before storing in localStorage
+    function cleanDoc(data) {
+        const cleaned = { ...data };
+        delete cleaned.updatedAt;
+        return cleaned;
+    }
+
     // Set up real-time listeners for Firestore changes
     function setupRealtimeListeners() {
         const db = getFirebaseDb();
@@ -164,11 +196,10 @@ const Sync = (() => {
             .onSnapshot((snapshot) => {
                 const data = {};
                 snapshot.forEach(doc => {
-                    data[doc.id] = doc.data();
+                    data[doc.id] = cleanDoc(doc.data());
                 });
                 localStorage.setItem('hl_days', JSON.stringify(data));
-                console.log('[Sync] Health days updated');
-                // Trigger UI refresh if needed
+                console.log('[Sync] Health days updated from Firestore');
                 if (typeof App !== 'undefined' && App.showPage) {
                     App.showPage('home');
                 }
@@ -180,9 +211,9 @@ const Sync = (() => {
             .collection(COLLECTIONS.healthSessions)
             .onSnapshot((snapshot) => {
                 const data = [];
-                snapshot.forEach(doc => data.push(doc.data()));
+                snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 localStorage.setItem('hl_sessions', JSON.stringify(data));
-                console.log('[Sync] Health sessions updated');
+                console.log('[Sync] Health sessions updated from Firestore');
             });
         unsubscribers.push(healthSessionsUnsub);
 
@@ -191,9 +222,9 @@ const Sync = (() => {
             .collection(COLLECTIONS.healthTemplates)
             .onSnapshot((snapshot) => {
                 const data = [];
-                snapshot.forEach(doc => data.push(doc.data()));
+                snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 localStorage.setItem('hl_templates', JSON.stringify(data));
-                console.log('[Sync] Health templates updated');
+                console.log('[Sync] Health templates updated from Firestore');
             });
         unsubscribers.push(healthTemplatesUnsub);
 
@@ -202,9 +233,9 @@ const Sync = (() => {
             .collection(COLLECTIONS.habits)
             .onSnapshot((snapshot) => {
                 const data = [];
-                snapshot.forEach(doc => data.push(doc.data()));
-                localStorage.setItem('habits_list', JSON.stringify(data));
-                console.log('[Sync] Habits updated');
+                snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
+                localStorage.setItem('ht_habits', JSON.stringify(data));
+                console.log('[Sync] Habits updated from Firestore');
                 if (typeof HabitsApp !== 'undefined') {
                     HabitsApp.renderCurrentPage();
                 }
@@ -219,8 +250,8 @@ const Sync = (() => {
                 snapshot.forEach(doc => {
                     data[doc.id] = doc.data().completions;
                 });
-                localStorage.setItem('habits_completions', JSON.stringify(data));
-                console.log('[Sync] Habits completions updated');
+                localStorage.setItem('ht_completions', JSON.stringify(data));
+                console.log('[Sync] Habits completions updated from Firestore');
                 if (typeof HabitsApp !== 'undefined') {
                     HabitsApp.renderCurrentPage();
                 }
@@ -231,12 +262,19 @@ const Sync = (() => {
         const journalUnsub = db.collection('users').doc(userId)
             .collection(COLLECTIONS.journal)
             .onSnapshot((snapshot) => {
-                const data = {};
+                const data5mj = {};
+                const dataDR = {};
                 snapshot.forEach(doc => {
-                    data[doc.id] = doc.data();
+                    const docData = cleanDoc(doc.data());
+                    if (docData.type === '5mj' && docData.date) {
+                        data5mj[docData.date] = docData;
+                    } else if (docData.type === 'daily_review' && docData.date) {
+                        dataDR[docData.date] = docData;
+                    }
                 });
-                localStorage.setItem('5mj_data', JSON.stringify(data));
-                console.log('[Sync] Journal updated');
+                localStorage.setItem('5mj_entries', JSON.stringify(data5mj));
+                localStorage.setItem('dr_entries', JSON.stringify(dataDR));
+                console.log('[Sync] Journal updated from Firestore');
             });
         unsubscribers.push(journalUnsub);
 
@@ -245,9 +283,9 @@ const Sync = (() => {
             .collection(COLLECTIONS.workTasks)
             .onSnapshot((snapshot) => {
                 const data = [];
-                snapshot.forEach(doc => data.push(doc.data()));
+                snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 localStorage.setItem('work_tasks', JSON.stringify(data));
-                console.log('[Sync] Work tasks updated');
+                console.log('[Sync] Work tasks updated from Firestore');
             });
         unsubscribers.push(workTasksUnsub);
 
