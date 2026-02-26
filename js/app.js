@@ -134,7 +134,9 @@ const App = (() => {
         }
 
         // Update date display with navigation context
-        const dateLabel = isHomeToday() ? formatFullDate(homeDate) : formatFullDate(homeDate);
+        const dateLabel = isHomeToday()
+            ? 'Vandaag, ' + formatFullDate(homeDate)
+            : formatFullDate(homeDate);
         document.getElementById('home-date').textContent = dateLabel;
         document.getElementById('card-weight-val').textContent = weightVal;
         document.getElementById('card-bp-val').textContent = bpVal;
@@ -996,7 +998,79 @@ const App = (() => {
     // SETTINGS
     // ============================================================
     function renderSettings() {
-        // Nothing dynamic for now
+        // Storage usage
+        let totalBytes = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            totalBytes += key.length + (localStorage.getItem(key) || '').length;
+        }
+        totalBytes *= 2; // UTF-16 = 2 bytes per character
+        const usageKB = (totalBytes / 1024).toFixed(1);
+        const usageMB = (totalBytes / (1024 * 1024)).toFixed(2);
+        const usageLabel = totalBytes > 1024 * 1024 ? usageMB + ' MB' : usageKB + ' KB';
+
+        const storageEl = document.getElementById('settings-storage-usage');
+        if (storageEl) storageEl.textContent = usageLabel;
+
+        // Data counts
+        const allDays = DB.getAllDays();
+        const dayKeys = Object.keys(allDays);
+        const dayCount = dayKeys.length;
+
+        let weightCount = 0, bpCount = 0, sleepCount = 0, gymCount = 0, drinksCount = 0, nutritionCount = 0;
+        for (const key of dayKeys) {
+            const day = allDays[key];
+            if (day.weights) weightCount += day.weights.length;
+            if (day.bloodPressure) bpCount += day.bloodPressure.length;
+            if (day.sleepEntries) sleepCount += day.sleepEntries.length;
+            if (day.gymSessions) gymCount += day.gymSessions.length;
+            if (day.drinks) drinksCount += day.drinks.length;
+            if (day.nutrition) nutritionCount += day.nutrition.length;
+        }
+
+        const sessionCount = DB.getRecentSessions(999999).length;
+        const habitCount = (typeof HabitsDB !== 'undefined' && HabitsDB.getHabits) ? HabitsDB.getHabits().length : 0;
+
+        const statsEl = document.getElementById('settings-data-stats');
+        if (statsEl) {
+            statsEl.innerHTML = `
+                <div class="settings-row">
+                    <span class="settings-label">Dagen bijgehouden</span>
+                    <span class="settings-value">${dayCount}</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Gewichtsmetingen</span>
+                    <span class="settings-value">${weightCount}</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Bloeddrukmetingen</span>
+                    <span class="settings-value">${bpCount}</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Slaapregistraties</span>
+                    <span class="settings-value">${sleepCount}</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Gym sessies</span>
+                    <span class="settings-value">${gymCount}</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Drankjes registraties</span>
+                    <span class="settings-value">${drinksCount}</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Voeding registraties</span>
+                    <span class="settings-value">${nutritionCount}</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Workout sessies</span>
+                    <span class="settings-value">${sessionCount}</span>
+                </div>
+                <div class="settings-row">
+                    <span class="settings-label">Actieve gewoontes</span>
+                    <span class="settings-value">${habitCount}</span>
+                </div>`;
+        }
     }
 
     function clearAllData() {
