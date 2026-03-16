@@ -285,6 +285,84 @@ describe('HabitsDB', () => {
             expect(streak.current).toBe(1);
             expect(streak.longest).toBe(1);
         });
+
+        it('longest streak: mid-streak day under goalCount breaks the streak', () => {
+            const h = createHabit({ goalCount: 2 });
+            const t = today();
+            // Days -4 to -3: both meet goal (2 completions each)
+            for (const offset of [-4, -3]) {
+                HabitsDB.addCompletion(addDays(t, offset), h.id);
+                HabitsDB.addCompletion(addDays(t, offset), h.id);
+            }
+            // Day -2: only 1 completion (under goalCount=2) — should break streak
+            HabitsDB.addCompletion(addDays(t, -2), h.id);
+            // Days -1 to 0: both meet goal
+            for (const offset of [-1, 0]) {
+                HabitsDB.addCompletion(addDays(t, offset), h.id);
+                HabitsDB.addCompletion(addDays(t, offset), h.id);
+            }
+            const streak = HabitsDB.calculateStreak(h.id);
+            expect(streak.current).toBe(2);
+            expect(streak.longest).toBe(2);
+        });
+
+        it('longest streak: first date under goalCount does not start a streak', () => {
+            const h = createHabit({ goalCount: 2 });
+            const t = today();
+            // Day -3: 1 completion (under goal)
+            HabitsDB.addCompletion(addDays(t, -3), h.id);
+            // Days -2 to 0: 2 completions each (meets goal)
+            for (const offset of [-2, -1, 0]) {
+                HabitsDB.addCompletion(addDays(t, offset), h.id);
+                HabitsDB.addCompletion(addDays(t, offset), h.id);
+            }
+            const streak = HabitsDB.calculateStreak(h.id);
+            expect(streak.current).toBe(3);
+            expect(streak.longest).toBe(3);
+        });
+
+        it('longest streak: all dates under goalCount gives longest 0', () => {
+            const h = createHabit({ goalCount: 3 });
+            const t = today();
+            // 5 consecutive days, each with only 1 completion (goalCount=3)
+            for (let i = 0; i < 5; i++) {
+                HabitsDB.addCompletion(addDays(t, -i), h.id);
+            }
+            const streak = HabitsDB.calculateStreak(h.id);
+            expect(streak.current).toBe(0);
+            expect(streak.longest).toBe(0);
+        });
+
+        it('longest streak: multiple separate streaks picks the longest', () => {
+            const h = createHabit();
+            const t = today();
+            // Old 4-day streak (days -20 to -17)
+            for (let i = 20; i >= 17; i--) {
+                HabitsDB.addCompletion(addDays(t, -i), h.id);
+            }
+            // Middle 2-day streak (days -10 to -9)
+            HabitsDB.addCompletion(addDays(t, -10), h.id);
+            HabitsDB.addCompletion(addDays(t, -9), h.id);
+            // Current 1-day streak
+            HabitsDB.addCompletion(t, h.id);
+            const streak = HabitsDB.calculateStreak(h.id);
+            expect(streak.current).toBe(1);
+            expect(streak.longest).toBe(4);
+        });
+
+        it('longest streak: skipped days in dates array do not count', () => {
+            const h = createHabit();
+            const t = today();
+            // 3-day streak
+            HabitsDB.addCompletion(addDays(t, -2), h.id);
+            HabitsDB.addCompletion(addDays(t, -1), h.id);
+            HabitsDB.addCompletion(t, h.id);
+            // A skipped completion on day -3 should NOT extend the streak
+            HabitsDB.addCompletion(addDays(t, -3), h.id, '', 'skipped');
+            const streak = HabitsDB.calculateStreak(h.id);
+            expect(streak.current).toBe(3);
+            expect(streak.longest).toBe(3);
+        });
     });
 
     // ============================

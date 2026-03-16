@@ -130,8 +130,8 @@ Belangrijkste functies:
 
 | # | Probleem | Locatie | Ernst |
 |---|----------|---------|-------|
-| 1 | `_csvSafe()` handelt geen quotes af | `export.js:44` | Medium |
-| 2 | Longest-streak telling mogelijk incorrect | `habits-db.js:283-294` | Hoog |
+| 1 | ~~`_csvSafe()` handelt geen quotes af~~ | `export.js:44` | **Opgelost** |
+| 2 | ~~Longest-streak telling mogelijk incorrect~~ | `habits-db.js:283-294` | **Weerlegd** — logica is correct, 6 edge case tests bevestigen dit |
 | 3 | Firestore batch limiet niet afgedwongen | `sync.js:98` | Hoog |
 | 4 | Gedupliceerde `_dateRange()` utility | `export.js:49` + `weekly-review.js:50` | Laag |
 | 5 | `addGym()` laat NaN duration door | `db.js:339` | Laag |
