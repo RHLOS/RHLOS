@@ -84,28 +84,30 @@ const Layout = (() => {
                 .then((registration) => {
                     console.log('[PWA] Service Worker registered:', registration.scope);
 
+                    // Check for updates periodically (every 5 minutes)
+                    setInterval(() => registration.update(), 5 * 60 * 1000);
+
                     // Check for updates
                     registration.addEventListener('updatefound', () => {
                         const newWorker = registration.installing;
                         newWorker.addEventListener('statechange', () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // New version available
-                                console.log('[PWA] New version available');
-                                showUpdateNotification();
+                                // New version available — activate it
+                                console.log('[PWA] New version available, activating...');
+                                newWorker.postMessage({ type: 'SKIP_WAITING' });
                             }
                         });
+                    });
+
+                    // Reload page when new SW takes control
+                    navigator.serviceWorker.addEventListener('controllerchange', () => {
+                        console.log('[PWA] New version active, reloading...');
+                        window.location.reload();
                     });
                 })
                 .catch((error) => {
                     console.log('[PWA] Service Worker registration failed:', error);
                 });
-        }
-    }
-
-    function showUpdateNotification() {
-        // Simple update notification - can be enhanced later
-        if (confirm('Er is een nieuwe versie beschikbaar. Wil je de pagina herladen?')) {
-            window.location.reload();
         }
     }
 

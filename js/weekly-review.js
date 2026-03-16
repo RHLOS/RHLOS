@@ -78,6 +78,9 @@ const WeeklyReview = (() => {
     function save(state) {
         try {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+                Sync.saveDocument('weekly_review', 'checklist', { data: state });
+            }
         } catch (e) {
             console.error('WeeklyReview save fout:', e);
         }
@@ -91,6 +94,9 @@ const WeeklyReview = (() => {
         const now = new Date();
         try {
             localStorage.setItem(HISTORY_KEY, now.toISOString());
+            if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+                Sync.saveDocument('weekly_review', 'last_completed', { value: now.toISOString() });
+            }
         } catch (e) {
             console.error('WeeklyReview saveLastCompleted fout:', e);
         }
@@ -109,6 +115,12 @@ const WeeklyReview = (() => {
     function _saveSummaries(data) {
         try {
             localStorage.setItem(SUMMARY_KEY, JSON.stringify(data));
+            // Sync each summary individually to Firestore
+            if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+                for (const [weekKey, summary] of Object.entries(data)) {
+                    Sync.saveDocument('weekly_review', 'summary_' + weekKey, summary);
+                }
+            }
         } catch (e) {
             console.error('WeeklyReview _saveSummaries fout:', e);
         }

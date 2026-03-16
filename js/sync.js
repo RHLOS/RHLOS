@@ -15,7 +15,10 @@ const Sync = (() => {
         habits: 'habits',
         habitsCompletions: 'habits_completions',
         journal: 'journal',
-        workTasks: 'work_tasks'
+        workTasks: 'work_tasks',
+        workClients: 'work_clients',
+        workProjects: 'work_projects',
+        weeklyReview: 'weekly_review'
     };
 
     function startSync(uid) {
@@ -162,11 +165,52 @@ const Sync = (() => {
         }
 
         // Work Tasks
-        const workTasks = JSON.parse(localStorage.getItem('work_tasks') || '[]');
+        const workTasks = JSON.parse(localStorage.getItem('wk_tasks') || '[]');
         for (const task of workTasks) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.workTasks).doc(task.id);
             batch.set(docRef, { ...task, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            operations++;
+        }
+
+        // Work Clients
+        const workClients = JSON.parse(localStorage.getItem('wk_clients') || '[]');
+        for (const client of workClients) {
+            const docRef = db.collection('users').doc(userId)
+                .collection(COLLECTIONS.workClients).doc(client.id);
+            batch.set(docRef, { ...client, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            operations++;
+        }
+
+        // Work Projects
+        const workProjects = JSON.parse(localStorage.getItem('wk_projects') || '[]');
+        for (const project of workProjects) {
+            const docRef = db.collection('users').doc(userId)
+                .collection(COLLECTIONS.workProjects).doc(project.id);
+            batch.set(docRef, { ...project, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            operations++;
+        }
+
+        // Weekly Review — checklist, last completed, summaries
+        const wrChecklist = localStorage.getItem('wr_checklist');
+        if (wrChecklist) {
+            const docRef = db.collection('users').doc(userId)
+                .collection(COLLECTIONS.weeklyReview).doc('checklist');
+            batch.set(docRef, { data: JSON.parse(wrChecklist), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            operations++;
+        }
+        const wrLastCompleted = localStorage.getItem('wr_last_completed');
+        if (wrLastCompleted) {
+            const docRef = db.collection('users').doc(userId)
+                .collection(COLLECTIONS.weeklyReview).doc('last_completed');
+            batch.set(docRef, { value: wrLastCompleted, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+            operations++;
+        }
+        const wrSummaries = JSON.parse(localStorage.getItem('wr_summaries') || '{}');
+        for (const [weekKey, summary] of Object.entries(wrSummaries)) {
+            const docRef = db.collection('users').doc(userId)
+                .collection(COLLECTIONS.weeklyReview).doc('summary_' + weekKey);
+            batch.set(docRef, { ...summary, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
             operations++;
         }
 
@@ -284,10 +328,58 @@ const Sync = (() => {
             .onSnapshot((snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
-                localStorage.setItem('work_tasks', JSON.stringify(data));
+                localStorage.setItem('wk_tasks', JSON.stringify(data));
                 console.log('[Sync] Work tasks updated from Firestore');
             });
         unsubscribers.push(workTasksUnsub);
+
+        // Work Clients listener
+        const workClientsUnsub = db.collection('users').doc(userId)
+            .collection(COLLECTIONS.workClients)
+            .onSnapshot((snapshot) => {
+                const data = [];
+                snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
+                localStorage.setItem('wk_clients', JSON.stringify(data));
+                console.log('[Sync] Work clients updated from Firestore');
+            });
+        unsubscribers.push(workClientsUnsub);
+
+        // Work Projects listener
+        const workProjectsUnsub = db.collection('users').doc(userId)
+            .collection(COLLECTIONS.workProjects)
+            .onSnapshot((snapshot) => {
+                const data = [];
+                snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
+                localStorage.setItem('wk_projects', JSON.stringify(data));
+                console.log('[Sync] Work projects updated from Firestore');
+            });
+        unsubscribers.push(workProjectsUnsub);
+
+        // Weekly Review listener
+        const weeklyReviewUnsub = db.collection('users').doc(userId)
+            .collection(COLLECTIONS.weeklyReview)
+            .onSnapshot((snapshot) => {
+                const summaries = {};
+                snapshot.forEach(doc => {
+                    const data = cleanDoc(doc.data());
+                    if (doc.id === 'checklist') {
+                        localStorage.setItem('wr_checklist', JSON.stringify(data.data || {}));
+                    } else if (doc.id === 'last_completed') {
+                        localStorage.setItem('wr_last_completed', data.value || '');
+                    } else if (doc.id.startsWith('summary_')) {
+                        const weekKey = doc.id.replace('summary_', '');
+                        summaries[weekKey] = data;
+                    }
+                });
+                if (Object.keys(summaries).length > 0) {
+                    // Merge with existing summaries (don't overwrite if Firestore has fewer)
+                    const existing = JSON.parse(localStorage.getItem('wr_summaries') || '{}');
+                    Object.assign(existing, summaries);
+                    localStorage.setItem('wr_summaries', JSON.stringify(existing));
+                }
+                console.log('[Sync] Weekly review updated from Firestore');
+            });
+        unsubscribers.push(weeklyReviewUnsub);
 
         console.log('[Sync] Real-time listeners active');
     }

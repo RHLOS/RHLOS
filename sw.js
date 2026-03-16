@@ -2,7 +2,7 @@
 // Service Worker for RHLOS PWA
 // ============================================================
 
-const CACHE_NAME = 'rhlos-v14';
+const CACHE_NAME = 'rhlos-v15';
 const OFFLINE_URL = './';
 
 // Files to cache for offline use (relative paths for GitHub Pages compatibility)
@@ -72,52 +72,71 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network-first for app files, cache-first for static assets
 self.addEventListener('fetch', (event) => {
     // Skip non-GET requests
     if (event.request.method !== 'GET') {
         return;
     }
 
-    // Skip external requests (like weather API)
+    // Skip external requests (like weather API, CORS proxies)
     if (!event.request.url.startsWith(self.location.origin)) {
         return;
     }
 
-    event.respondWith(
-        caches.match(event.request)
-            .then((cachedResponse) => {
-                if (cachedResponse) {
-                    // Return cached version
-                    return cachedResponse;
-                }
+    // Network-first for HTML, JS, and CSS (so updates load automatically)
+    const url = new URL(event.request.url);
+    const isAppFile = url.pathname.endsWith('.html')
+        || url.pathname.endsWith('.js')
+        || url.pathname.endsWith('.css')
+        || url.pathname.endsWith('/');
 
-                // Not in cache, fetch from network
-                return fetch(event.request)
-                    .then((networkResponse) => {
-                        // Don't cache if not a valid response
-                        if (!networkResponse || networkResponse.status !== 200) {
-                            return networkResponse;
-                        }
-
-                        // Clone the response (can only be consumed once)
+    if (isAppFile) {
+        event.respondWith(
+            fetch(event.request)
+                .then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
                         const responseToCache = networkResponse.clone();
-
-                        // Add to cache for future use
-                        caches.open(CACHE_NAME)
-                            .then((cache) => {
-                                cache.put(event.request, responseToCache);
-                            });
-
-                        return networkResponse;
-                    })
-                    .catch(() => {
-                        // Network failed, try to return cached offline page
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
+                    return networkResponse;
+                })
+                .catch(() => {
+                    // Offline — fall back to cache
+                    return caches.match(event.request).then((cached) => {
+                        if (cached) return cached;
                         if (event.request.mode === 'navigate') {
                             return caches.match(OFFLINE_URL);
                         }
                         return null;
                     });
+                })
+        );
+        return;
+    }
+
+    // Cache-first for static assets (images, icons, manifest)
+    event.respondWith(
+        caches.match(event.request)
+            .then((cachedResponse) => {
+                if (cachedResponse) return cachedResponse;
+                return fetch(event.request).then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(event.request, responseToCache);
+                        });
+                    }
+                    return networkResponse;
+                });
+            })
+            .catch(() => {
+                if (event.request.mode === 'navigate') {
+                    return caches.match(OFFLINE_URL);
+                }
+                return null;
             })
     );
 });

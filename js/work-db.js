@@ -75,6 +75,9 @@ const WorkDB = (() => {
         };
         clients.push(client);
         _set(CLIENTS_KEY, clients);
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('work_clients', client.id, client);
+        }
         return client;
     }
 
@@ -84,6 +87,9 @@ const WorkDB = (() => {
         if (idx === -1) return null;
         Object.assign(clients[idx], updates);
         _set(CLIENTS_KEY, clients);
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('work_clients', id, clients[idx]);
+        }
         return clients[idx];
     }
 
@@ -102,6 +108,9 @@ const WorkDB = (() => {
     function permanentDeleteClient(id) {
         const clients = _getClientsRaw().filter(c => c.id !== id);
         _set(CLIENTS_KEY, clients);
+        if (typeof Sync !== 'undefined' && Sync.deleteDocument) {
+            Sync.deleteDocument('work_clients', id);
+        }
     }
 
     // --- Projects CRUD ---
@@ -140,6 +149,9 @@ const WorkDB = (() => {
         };
         projects.push(project);
         _set(PROJECTS_KEY, projects);
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('work_projects', project.id, project);
+        }
         return project;
     }
 
@@ -149,6 +161,9 @@ const WorkDB = (() => {
         if (idx === -1) return null;
         Object.assign(projects[idx], updates);
         _set(PROJECTS_KEY, projects);
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('work_projects', id, projects[idx]);
+        }
         return projects[idx];
     }
 
@@ -167,6 +182,9 @@ const WorkDB = (() => {
     function permanentDeleteProject(id) {
         const projects = _getProjectsRaw().filter(p => p.id !== id);
         _set(PROJECTS_KEY, projects);
+        if (typeof Sync !== 'undefined' && Sync.deleteDocument) {
+            Sync.deleteDocument('work_projects', id);
+        }
     }
 
     // --- Tasks CRUD ---
@@ -239,6 +257,9 @@ const WorkDB = (() => {
 
         tasks.push(task);
         _set(TASKS_KEY, tasks);
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('work_tasks', task.id, task);
+        }
         return task;
     }
 
@@ -268,6 +289,9 @@ const WorkDB = (() => {
 
         Object.assign(tasks[idx], updates);
         _set(TASKS_KEY, tasks);
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('work_tasks', id, tasks[idx]);
+        }
         return tasks[idx];
     }
 
@@ -290,6 +314,9 @@ const WorkDB = (() => {
     function permanentDeleteTask(id) {
         const tasks = _getTasksRaw().filter(t => t.id !== id);
         _set(TASKS_KEY, tasks);
+        if (typeof Sync !== 'undefined' && Sync.deleteDocument) {
+            Sync.deleteDocument('work_tasks', id);
+        }
     }
 
     function getArchivedTasks() {
@@ -303,33 +330,46 @@ const WorkDB = (() => {
     function moveTasks(taskIds, projectId, clientId) {
         const tasks = _getTasksRaw();
         let changed = false;
+        const updated = [];
         taskIds.forEach(taskId => {
             const idx = tasks.findIndex(t => t.id === taskId);
             if (idx !== -1) {
                 tasks[idx].projectId = projectId;
                 tasks[idx].clientId = clientId;
-                // If task was inbox, change status to gepland
                 if (tasks[idx].status === 'inbox') {
                     tasks[idx].status = 'gepland';
                 }
+                updated.push(tasks[idx]);
                 changed = true;
             }
         });
-        if (changed) _set(TASKS_KEY, tasks);
+        if (changed) {
+            _set(TASKS_KEY, tasks);
+            if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+                updated.forEach(t => Sync.saveDocument('work_tasks', t.id, t));
+            }
+        }
     }
 
     function batchArchive(taskIds) {
         const tasks = _getTasksRaw();
         const now = new Date().toISOString();
         let changed = false;
+        const updated = [];
         taskIds.forEach(taskId => {
             const idx = tasks.findIndex(t => t.id === taskId);
             if (idx !== -1) {
                 tasks[idx].archivedAt = now;
+                updated.push(tasks[idx]);
                 changed = true;
             }
         });
-        if (changed) _set(TASKS_KEY, tasks);
+        if (changed) {
+            _set(TASKS_KEY, tasks);
+            if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+                updated.forEach(t => Sync.saveDocument('work_tasks', t.id, t));
+            }
+        }
     }
 
     // --- Volgende actie ---
@@ -351,6 +391,9 @@ const WorkDB = (() => {
         }
 
         _set(TASKS_KEY, tasks);
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('work_tasks', task.id, task);
+        }
         return task;
     }
 
@@ -413,6 +456,9 @@ const WorkDB = (() => {
 
         tasks.push(newTask);
         _set(TASKS_KEY, tasks);
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            Sync.saveDocument('work_tasks', newTask.id, newTask);
+        }
         return newTask;
     }
 
