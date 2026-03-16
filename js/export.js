@@ -530,5 +530,10 @@ const ExportService = (() => {
         URL.revokeObjectURL(url);
     }
 
-    return { exportCSV, exportPDF };
+    return {
+        exportCSV, exportPDF,
+        // Exposed for testing
+        generateDailyCSV, generateWorkoutCSV, generateHabitsCSV,
+        generateJournalCSV, generateWeekSummaryCSV, _csvSafe,
+    };
 })();

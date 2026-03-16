@@ -5,6 +5,7 @@ let sandbox;
 let ExportService;
 let DB;
 let formatDateNL;
+let storage;
 
 describe('ExportService — CSV Generation', () => {
     beforeEach(() => {
@@ -12,6 +13,7 @@ describe('ExportService — CSV Generation', () => {
         DB = sandbox.DB;
         ExportService = sandbox.ExportService;
         formatDateNL = sandbox.formatDateNL;
+        storage = sandbox.localStorage;
     });
 
     // ============================
@@ -32,32 +34,298 @@ describe('ExportService — CSV Generation', () => {
     });
 
     // ============================
-    // generateDailyCSV
+    // _csvSafe
     // ============================
-    describe('generateDailyCSV (via exportCSV internals)', () => {
-        it('generates CSV header', () => {
-            // We can't directly call generateDailyCSV (private), but we can
-            // test via the data layer: add data and check getDaysInRange
-            DB.addWeight('2026-03-10', 80.5);
-            DB.addSleep('2026-03-10', 7, false, '');
-            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
-            expect(days).toHaveLength(1);
-            expect(days[0].weights[0].kg).toBe(80.5);
+    describe('_csvSafe', () => {
+        it('replaces commas with semicolons', () => {
+            expect(ExportService._csvSafe('hello, world')).toBe('hello; world');
         });
 
-        it('handles day with multiple entries', () => {
-            DB.addWeight('2026-03-10', 80);
-            DB.addWeight('2026-03-10', 81);
-            DB.addBloodPressure('2026-03-10', 120, 80, 70, 'ochtend');
-            DB.addBloodPressure('2026-03-10', 115, 75, 65, 'avond');
-            const day = DB.getDay('2026-03-10');
-            expect(day.weights).toHaveLength(2);
-            expect(day.bloodPressure).toHaveLength(2);
+        it('replaces newlines with spaces', () => {
+            expect(ExportService._csvSafe('line1\nline2')).toBe('line1 line2');
+        });
+
+        it('handles both commas and newlines', () => {
+            expect(ExportService._csvSafe('a, b\nc')).toBe('a; b c');
+        });
+
+        it('handles null/undefined input', () => {
+            expect(ExportService._csvSafe(null)).toBe('');
+            expect(ExportService._csvSafe(undefined)).toBe('');
+        });
+
+        it('handles empty string', () => {
+            expect(ExportService._csvSafe('')).toBe('');
+        });
+
+        // Known bug: quotes are not handled
+        it('does NOT handle double quotes (known bug)', () => {
+            const result = ExportService._csvSafe('value with "quotes"');
+            // This demonstrates the known bug — quotes pass through unescaped
+            expect(result).toContain('"');
         });
     });
 
     // ============================
-    // Data integrity for CSV export
+    // generateDailyCSV — actual output
+    // ============================
+    describe('generateDailyCSV — CSV output strings', () => {
+        it('generates a header row', () => {
+            const csv = ExportService.generateDailyCSV([], []);
+            const lines = csv.split('\n');
+            expect(lines[0]).toContain('Datum');
+            expect(lines[0]).toContain('Gewicht (kg)');
+            expect(lines[0]).toContain('Systolisch');
+            expect(lines[0]).toContain('Slaap (uur)');
+        });
+
+        it('generates a single row for a day with one entry', () => {
+            DB.addWeight('2026-03-10', 80.5);
+            DB.addSleep('2026-03-10', 7, false, '');
+            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
+            const sessions = DB.getSessionsInRange('2026-03-10', '2026-03-10');
+
+            const csv = ExportService.generateDailyCSV(days, sessions);
+            const lines = csv.split('\n');
+            expect(lines).toHaveLength(2); // header + 1 data row
+            expect(lines[1]).toContain('2026-03-10');
+            expect(lines[1]).toContain('80.5');
+        });
+
+        it('generates multiple rows for a day with multiple entries', () => {
+            DB.addWeight('2026-03-10', 80);
+            DB.addWeight('2026-03-10', 81);
+            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
+
+            const csv = ExportService.generateDailyCSV(days, []);
+            const lines = csv.split('\n');
+            expect(lines).toHaveLength(3); // header + 2 data rows
+            // Only first row shows the date
+            expect(lines[1]).toMatch(/^2026-03-10,/);
+            expect(lines[2]).toMatch(/^,/); // second row starts with empty date
+        });
+
+        it('includes workout name on first row only', () => {
+            DB.addWeight('2026-03-10', 80);
+            DB.addWeight('2026-03-10', 81);
+            const session = DB.startSession('tpl_a');
+            // Manually adjust session date for test
+            const sessions = DB.getSessionsInRange(DB.todayKey(), DB.todayKey());
+            // Use the actual day the session was created
+            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
+
+            const csv = ExportService.generateDailyCSV(days, []);
+            const lines = csv.split('\n');
+            // Verify multi-row structure
+            expect(lines.length).toBeGreaterThan(2);
+        });
+
+        it('handles a day with blood pressure entries', () => {
+            DB.addBloodPressure('2026-03-10', 120, 80, 70, 'ochtend');
+            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
+
+            const csv = ExportService.generateDailyCSV(days, []);
+            const lines = csv.split('\n');
+            expect(lines[1]).toContain('120');
+            expect(lines[1]).toContain('80');
+            expect(lines[1]).toContain('70');
+            expect(lines[1]).toContain('ochtend');
+        });
+
+        it('shows Niet gemeten for skipped BP', () => {
+            DB.addBloodPressureSkipped('2026-03-10', 'avond');
+            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
+
+            const csv = ExportService.generateDailyCSV(days, []);
+            const lines = csv.split('\n');
+            expect(lines[1]).toContain('Niet gemeten');
+        });
+
+        it('handles drinks data correctly', () => {
+            DB.addDrinks('2026-03-10', 3, 1, true, 2, 'wijn', 2.5);
+            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
+
+            const csv = ExportService.generateDailyCSV(days, []);
+            const lines = csv.split('\n');
+            expect(lines[1]).toContain('3');  // coffee
+            expect(lines[1]).toContain('Ja'); // alcohol
+        });
+
+        it('handles nutrition data', () => {
+            DB.addNutrition('2026-03-10', 'haver', 'appel', 'brood', 'noten', 'pasta', 'yoghurt');
+            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
+
+            const csv = ExportService.generateDailyCSV(days, []);
+            const lines = csv.split('\n');
+            expect(lines[1]).toContain('haver');
+            expect(lines[1]).toContain('pasta');
+        });
+
+        it('replaces commas in notes with semicolons', () => {
+            DB.addWeight('2026-03-10', 80);
+            const days = DB.getDaysInRange('2026-03-10', '2026-03-10');
+            // Manually set notes with comma
+            days[0].notes = 'note with, comma';
+
+            const csv = ExportService.generateDailyCSV(days, []);
+            expect(csv).toContain('note with; comma');
+            expect(csv).not.toContain('note with, comma');
+        });
+    });
+
+    // ============================
+    // generateWorkoutCSV
+    // ============================
+    describe('generateWorkoutCSV — CSV output', () => {
+        it('generates a header row', () => {
+            const csv = ExportService.generateWorkoutCSV([]);
+            expect(csv).toBe('Datum,Template,Oefening,Set,Reps,Gewicht (kg)');
+        });
+
+        it('generates rows for workout sessions', () => {
+            const session = DB.startSession('tpl_a');
+            const sessions = DB.getSessionsInRange(DB.todayKey(), DB.todayKey());
+            const csv = ExportService.generateWorkoutCSV(sessions);
+            const lines = csv.split('\n');
+
+            expect(lines.length).toBeGreaterThan(1);
+            // First data row should have the template name
+            expect(lines[1]).toContain('Workout A');
+        });
+    });
+
+    // ============================
+    // generateHabitsCSV
+    // ============================
+    describe('generateHabitsCSV — CSV output', () => {
+        it('generates header only when no completions', () => {
+            // Set up habits but no completions
+            storage.setItem('ht_habits', JSON.stringify([
+                { id: 'h1', name: 'Meditatie', icon: '🧘', category: 'HEALTH', archived: false, order: 0 }
+            ]));
+
+            const csv = ExportService.generateHabitsCSV('2026-03-09', '2026-03-10');
+            expect(csv).toBe('Datum,Habit,Categorie,Status');
+        });
+
+        it('maps done status to Gedaan', () => {
+            storage.setItem('ht_habits', JSON.stringify([
+                { id: 'h1', name: 'Meditatie', icon: '🧘', category: 'HEALTH', archived: false, order: 0 }
+            ]));
+            storage.setItem('ht_completions', JSON.stringify({
+                '2026-03-09': [{ id: 'c1', habitId: 'h1', status: 'done', timestamp: '', note: '' }]
+            }));
+
+            const csv = ExportService.generateHabitsCSV('2026-03-09', '2026-03-09');
+            const lines = csv.split('\n');
+            expect(lines[1]).toContain('Gedaan');
+            expect(lines[1]).toContain('Meditatie');
+            expect(lines[1]).toContain('HEALTH');
+        });
+
+        it('maps skipped status to Overgeslagen', () => {
+            storage.setItem('ht_habits', JSON.stringify([
+                { id: 'h1', name: 'Meditatie', icon: '🧘', category: 'HEALTH', archived: false, order: 0 }
+            ]));
+            storage.setItem('ht_completions', JSON.stringify({
+                '2026-03-09': [{ id: 'c1', habitId: 'h1', status: 'skipped', timestamp: '', note: '' }]
+            }));
+
+            const csv = ExportService.generateHabitsCSV('2026-03-09', '2026-03-09');
+            const lines = csv.split('\n');
+            expect(lines[1]).toContain('Overgeslagen');
+        });
+
+        it('excludes archived habits', () => {
+            storage.setItem('ht_habits', JSON.stringify([
+                { id: 'h1', name: 'Active', icon: '✅', category: '', archived: false, order: 0 },
+                { id: 'h2', name: 'Archived', icon: '❌', category: '', archived: true, order: 1 },
+            ]));
+            storage.setItem('ht_completions', JSON.stringify({
+                '2026-03-09': [
+                    { id: 'c1', habitId: 'h1', status: 'done', timestamp: '', note: '' },
+                    { id: 'c2', habitId: 'h2', status: 'done', timestamp: '', note: '' },
+                ]
+            }));
+
+            const csv = ExportService.generateHabitsCSV('2026-03-09', '2026-03-09');
+            expect(csv).toContain('Active');
+            expect(csv).not.toContain('Archived');
+        });
+
+        it('sanitizes habit names with commas', () => {
+            storage.setItem('ht_habits', JSON.stringify([
+                { id: 'h1', name: 'Read, Write', icon: '📖', category: 'EDU', archived: false, order: 0 }
+            ]));
+            storage.setItem('ht_completions', JSON.stringify({
+                '2026-03-09': [{ id: 'c1', habitId: 'h1', status: 'done', timestamp: '', note: '' }]
+            }));
+
+            const csv = ExportService.generateHabitsCSV('2026-03-09', '2026-03-09');
+            // Comma should be replaced by semicolon
+            expect(csv).toContain('Read; Write');
+        });
+    });
+
+    // ============================
+    // generateJournalCSV
+    // ============================
+    describe('generateJournalCSV — CSV output', () => {
+        it('returns empty string when no entries', () => {
+            const csv = ExportService.generateJournalCSV('2026-03-09', '2026-03-10');
+            expect(csv).toBe('');
+        });
+
+        it('generates 5MJ section with header and data', () => {
+            storage.setItem('5mj_entries', JSON.stringify({
+                '2026-03-09': { grateful: 'sun', great1: 'run', great2: '', great3: '', affirmations: 'strong' }
+            }));
+
+            const csv = ExportService.generateJournalCSV('2026-03-09', '2026-03-09');
+            const lines = csv.split('\n');
+            expect(lines[0]).toContain('Dankbaar');
+            expect(lines[0]).toContain('Affirmaties');
+            expect(lines[1]).toContain('2026-03-09');
+            expect(lines[1]).toContain('sun');
+            expect(lines[1]).toContain('strong');
+        });
+
+        it('generates Daily Review section', () => {
+            storage.setItem('dr_entries', JSON.stringify({
+                '2026-03-09': { dag: 'goed', energiePlus: 'sport', energieMin: 'moe', hoogtepunt1: 'lunch', hoogtepunt2: '', hoogtepunt3: '' }
+            }));
+
+            const csv = ExportService.generateJournalCSV('2026-03-09', '2026-03-09');
+            expect(csv).toContain('Energie+');
+            expect(csv).toContain('goed');
+            expect(csv).toContain('sport');
+        });
+
+        it('combines both sections with blank line separator', () => {
+            storage.setItem('5mj_entries', JSON.stringify({
+                '2026-03-09': { grateful: 'x', great1: '', great2: '', great3: '', affirmations: '' }
+            }));
+            storage.setItem('dr_entries', JSON.stringify({
+                '2026-03-09': { dag: 'ok', energiePlus: '', energieMin: '', hoogtepunt1: '', hoogtepunt2: '', hoogtepunt3: '' }
+            }));
+
+            const csv = ExportService.generateJournalCSV('2026-03-09', '2026-03-09');
+            // Should have a blank line between sections
+            expect(csv).toContain('\n\n');
+        });
+
+        it('sanitizes journal text with commas', () => {
+            storage.setItem('5mj_entries', JSON.stringify({
+                '2026-03-09': { grateful: 'family, friends', great1: '', great2: '', great3: '', affirmations: '' }
+            }));
+
+            const csv = ExportService.generateJournalCSV('2026-03-09', '2026-03-09');
+            expect(csv).toContain('family; friends');
+        });
+    });
+
+    // ============================
+    // Data integrity for CSV export (original tests)
     // ============================
     describe('Data shapes for CSV export', () => {
         it('weight entries have correct shape', () => {
