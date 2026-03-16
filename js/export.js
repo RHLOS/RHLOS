@@ -42,7 +42,11 @@ const ExportService = (() => {
     }
 
     function _csvSafe(str) {
-        return (str || '').replace(/,/g, ';').replace(/\n/g, ' ');
+        const s = (str || '').replace(/\n/g, ' ');
+        if (s.includes(',') || s.includes('"') || s.includes(';')) {
+            return '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
     }
 
     // --- Generate date range array ---

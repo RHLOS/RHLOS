@@ -37,8 +37,8 @@ describe('ExportService — CSV Generation', () => {
     // _csvSafe
     // ============================
     describe('_csvSafe', () => {
-        it('replaces commas with semicolons', () => {
-            expect(ExportService._csvSafe('hello, world')).toBe('hello; world');
+        it('wraps values containing commas in quotes', () => {
+            expect(ExportService._csvSafe('hello, world')).toBe('"hello, world"');
         });
 
         it('replaces newlines with spaces', () => {
@@ -46,7 +46,7 @@ describe('ExportService — CSV Generation', () => {
         });
 
         it('handles both commas and newlines', () => {
-            expect(ExportService._csvSafe('a, b\nc')).toBe('a; b c');
+            expect(ExportService._csvSafe('a, b\nc')).toBe('"a, b c"');
         });
 
         it('handles null/undefined input', () => {
@@ -58,11 +58,16 @@ describe('ExportService — CSV Generation', () => {
             expect(ExportService._csvSafe('')).toBe('');
         });
 
-        // Known bug: quotes are not handled
-        it('does NOT handle double quotes (known bug)', () => {
-            const result = ExportService._csvSafe('value with "quotes"');
-            // This demonstrates the known bug — quotes pass through unescaped
-            expect(result).toContain('"');
+        it('escapes double quotes per RFC 4180', () => {
+            expect(ExportService._csvSafe('value with "quotes"')).toBe('"value with ""quotes"""');
+        });
+
+        it('wraps values containing semicolons in quotes', () => {
+            expect(ExportService._csvSafe('a; b')).toBe('"a; b"');
+        });
+
+        it('handles commas + quotes together', () => {
+            expect(ExportService._csvSafe('say "hi", friend')).toBe('"say ""hi"", friend"');
         });
     });
 
@@ -262,8 +267,8 @@ describe('ExportService — CSV Generation', () => {
             }));
 
             const csv = ExportService.generateHabitsCSV('2026-03-09', '2026-03-09');
-            // Comma should be replaced by semicolon
-            expect(csv).toContain('Read; Write');
+            // Comma should be wrapped in quotes per RFC 4180
+            expect(csv).toContain('"Read, Write"');
         });
     });
 
@@ -320,7 +325,7 @@ describe('ExportService — CSV Generation', () => {
             }));
 
             const csv = ExportService.generateJournalCSV('2026-03-09', '2026-03-09');
-            expect(csv).toContain('family; friends');
+            expect(csv).toContain('"family, friends"');
         });
     });
 
