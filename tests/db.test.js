@@ -301,6 +301,20 @@ describe('DB — Health Data Layer', () => {
             expect(day.gymSessions[0].durationMinutes).toBe(0);
         });
 
+        it('addGym stores 0 (not NaN) for Niet gegaan with undefined duration', () => {
+            const day = DB.addGym('2026-03-10', 'Niet gegaan', undefined, '');
+            expect(day.gymSessions[0].durationMinutes).toBe(0);
+        });
+
+        it('addGym rejects negative duration', () => {
+            expect(DB.addGym('2026-03-10', 'Cardio', -10, '')).toBeNull();
+        });
+
+        it('addGym stores parsed integer duration (not original string)', () => {
+            const day = DB.addGym('2026-03-10', 'Cardio', '30.7', '');
+            expect(day.gymSessions[0].durationMinutes).toBe(30);
+        });
+
         it('addGym omits km when null or 0', () => {
             const day = DB.addGym('2026-03-10', 'Weights', 60, '', null);
             expect(day.gymSessions[0].km).toBeUndefined();

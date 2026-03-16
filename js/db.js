@@ -336,7 +336,7 @@ const DB = (() => {
         const entry = {
             id: generateId(),
             type: type,
-            durationMinutes: dur || 0,
+            durationMinutes: type === 'Niet gegaan' ? 0 : dur,
             note: note || '',
             timestamp: new Date().toISOString()
         };

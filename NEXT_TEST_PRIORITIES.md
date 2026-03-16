@@ -134,7 +134,7 @@ Belangrijkste functies:
 | 2 | ~~Longest-streak telling mogelijk incorrect~~ | `habits-db.js:283-294` | **Weerlegd** — logica is correct, 6 edge case tests bevestigen dit |
 | 3 | Firestore batch limiet niet afgedwongen | `sync.js:98` | Hoog |
 | 4 | Gedupliceerde `_dateRange()` utility | `export.js:49` + `weekly-review.js:50` | Laag |
-| 5 | `addGym()` laat NaN duration door | `db.js:339` | Laag |
+| 5 | ~~`addGym()` laat NaN duration door~~ | `db.js:339` | **Opgelost** |
 | 6 | Geen HTML sanitization in PDF export | `export.js:282-518` | Medium (XSS) |
 
 ---
