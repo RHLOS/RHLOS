@@ -103,13 +103,22 @@ const Layout = (() => {
     }
 
     function showUpdateNotification() {
-        // Simple update notification - can be enhanced later
-        if (confirm('Er is een nieuwe versie beschikbaar. Wil je de pagina herladen?')) {
-            window.location.reload();
+        const banner = document.getElementById('update-banner');
+        if (banner) {
+            banner.classList.add('visible');
         }
     }
 
-    return { init, openApp, goHome, showApp };
+    function dismissUpdate() {
+        const banner = document.getElementById('update-banner');
+        if (banner) banner.classList.remove('visible');
+    }
+
+    function applyUpdate() {
+        window.location.reload();
+    }
+
+    return { init, openApp, goHome, showApp, dismissUpdate, applyUpdate };
 })();
 
 document.addEventListener('DOMContentLoaded', Layout.init);

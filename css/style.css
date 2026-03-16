@@ -1644,3 +1644,49 @@ body[class*="theme-"] .wr-progress-text {
     opacity: 1;
     pointer-events: auto;
 }
+
+/* --- Update Banner --- */
+.update-banner {
+    position: fixed;
+    bottom: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--accent);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    font-size: 14px;
+    font-weight: 500;
+    transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+.update-banner.visible {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
+}
+.update-banner-text {
+    flex: 1;
+}
+.update-banner-btn {
+    background: rgba(255,255,255,0.25);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.update-banner-dismiss {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+}
