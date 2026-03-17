@@ -30,15 +30,18 @@ const Sync = (() => {
 
         updateSyncStatus('syncing');
 
-        // Check if this is the first sync (migration) or a returning user
+        // Always set up listeners, even if migration fails
         migrateIfNeeded()
+            .catch((error) => {
+                console.warn('[Sync] Migration check failed (non-fatal):', error);
+            })
             .then(() => {
-                // Start listening for changes from Firestore
+                // Start listening for changes from Firestore regardless
                 setupRealtimeListeners();
                 updateSyncStatus('synced');
             })
             .catch((error) => {
-                console.error('[Sync] Initial sync failed:', error);
+                console.error('[Sync] Listener setup failed:', error);
                 updateSyncStatus('error');
             });
     }
@@ -98,16 +101,32 @@ const Sync = (() => {
         const db = getFirebaseDb();
         if (!db || !userId) return;
 
-        const batch = db.batch();
+        // Firestore batch limit is 500 operations, so we split into multiple batches
+        let batches = [];
+        let currentBatch = db.batch();
         let operations = 0;
+        let batchOps = 0;
+        const BATCH_LIMIT = 450; // leave some margin
+
+        function addToBatch(docRef, data) {
+            if (batchOps >= BATCH_LIMIT) {
+                batches.push(currentBatch);
+                currentBatch = db.batch();
+                batchOps = 0;
+            }
+            currentBatch.set(docRef, data, { merge: true });
+            batchOps++;
+            operations++;
+        }
+
+        const ts = firebase.firestore.FieldValue.serverTimestamp();
 
         // Health Days
         const healthDays = JSON.parse(localStorage.getItem('hl_days') || '{}');
         for (const [dateKey, dayData] of Object.entries(healthDays)) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.healthDays).doc(dateKey);
-            batch.set(docRef, { ...dayData, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { ...dayData, updatedAt: ts });
         }
 
         // Health Sessions
@@ -115,8 +134,7 @@ const Sync = (() => {
         for (const session of healthSessions) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.healthSessions).doc(session.id);
-            batch.set(docRef, { ...session, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { ...session, updatedAt: ts });
         }
 
         // Health Templates
@@ -124,8 +142,7 @@ const Sync = (() => {
         for (const template of healthTemplates) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.healthTemplates).doc(template.id);
-            batch.set(docRef, { ...template, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { ...template, updatedAt: ts });
         }
 
         // Habits
@@ -133,8 +150,7 @@ const Sync = (() => {
         for (const habit of habits) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.habits).doc(habit.id);
-            batch.set(docRef, { ...habit, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { ...habit, updatedAt: ts });
         }
 
         // Habits Completions
@@ -142,8 +158,7 @@ const Sync = (() => {
         for (const [dateKey, completions] of Object.entries(habitsCompletions)) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.habitsCompletions).doc(dateKey);
-            batch.set(docRef, { completions, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { completions, updatedAt: ts });
         }
 
         // Journal - 5MJ entries
@@ -151,8 +166,7 @@ const Sync = (() => {
         for (const [dateKey, entry] of Object.entries(journal5MJ)) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.journal).doc('5mj_' + dateKey);
-            batch.set(docRef, { type: '5mj', date: dateKey, ...entry, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { type: '5mj', date: dateKey, ...entry, updatedAt: ts });
         }
 
         // Journal - Daily Review entries
@@ -160,8 +174,7 @@ const Sync = (() => {
         for (const [dateKey, entry] of Object.entries(journalDR)) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.journal).doc('dr_' + dateKey);
-            batch.set(docRef, { type: 'daily_review', date: dateKey, ...entry, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { type: 'daily_review', date: dateKey, ...entry, updatedAt: ts });
         }
 
         // Work Tasks
@@ -169,8 +182,7 @@ const Sync = (() => {
         for (const task of workTasks) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.workTasks).doc(task.id);
-            batch.set(docRef, { ...task, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { ...task, updatedAt: ts });
         }
 
         // Work Clients
@@ -178,8 +190,7 @@ const Sync = (() => {
         for (const client of workClients) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.workClients).doc(client.id);
-            batch.set(docRef, { ...client, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { ...client, updatedAt: ts });
         }
 
         // Work Projects
@@ -187,8 +198,7 @@ const Sync = (() => {
         for (const project of workProjects) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.workProjects).doc(project.id);
-            batch.set(docRef, { ...project, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { ...project, updatedAt: ts });
         }
 
         // Weekly Review — checklist, last completed, summaries
@@ -196,27 +206,28 @@ const Sync = (() => {
         if (wrChecklist) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.weeklyReview).doc('checklist');
-            batch.set(docRef, { data: JSON.parse(wrChecklist), updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { data: JSON.parse(wrChecklist), updatedAt: ts });
         }
         const wrLastCompleted = localStorage.getItem('wr_last_completed');
         if (wrLastCompleted) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.weeklyReview).doc('last_completed');
-            batch.set(docRef, { value: wrLastCompleted, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { value: wrLastCompleted, updatedAt: ts });
         }
         const wrSummaries = JSON.parse(localStorage.getItem('wr_summaries') || '{}');
         for (const [weekKey, summary] of Object.entries(wrSummaries)) {
             const docRef = db.collection('users').doc(userId)
                 .collection(COLLECTIONS.weeklyReview).doc('summary_' + weekKey);
-            batch.set(docRef, { ...summary, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
-            operations++;
+            addToBatch(docRef, { ...summary, updatedAt: ts });
         }
 
         if (operations > 0) {
-            await batch.commit();
-            console.log('[Sync] Uploaded', operations, 'items to Firestore');
+            // Commit the last batch
+            batches.push(currentBatch);
+            for (const b of batches) {
+                await b.commit();
+            }
+            console.log('[Sync] Uploaded', operations, 'items in', batches.length, 'batch(es) to Firestore');
         } else {
             console.log('[Sync] No local data to upload');
         }
@@ -234,6 +245,10 @@ const Sync = (() => {
         const db = getFirebaseDb();
         if (!db || !userId) return;
 
+        function onError(name) {
+            return (error) => console.error('[Sync] Listener error (' + name + '):', error);
+        }
+
         // Health Days listener
         const healthDaysUnsub = db.collection('users').doc(userId)
             .collection(COLLECTIONS.healthDays)
@@ -247,7 +262,7 @@ const Sync = (() => {
                 if (typeof App !== 'undefined' && App.showPage) {
                     App.showPage('home');
                 }
-            });
+            }, onError('healthDays'));
         unsubscribers.push(healthDaysUnsub);
 
         // Health Sessions listener
@@ -258,7 +273,7 @@ const Sync = (() => {
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 localStorage.setItem('hl_sessions', JSON.stringify(data));
                 console.log('[Sync] Health sessions updated from Firestore');
-            });
+            }, onError('healthSessions'));
         unsubscribers.push(healthSessionsUnsub);
 
         // Health Templates listener
@@ -269,7 +284,7 @@ const Sync = (() => {
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 localStorage.setItem('hl_templates', JSON.stringify(data));
                 console.log('[Sync] Health templates updated from Firestore');
-            });
+            }, onError('healthTemplates'));
         unsubscribers.push(healthTemplatesUnsub);
 
         // Habits listener
@@ -283,7 +298,7 @@ const Sync = (() => {
                 if (typeof HabitsApp !== 'undefined') {
                     HabitsApp.renderCurrentPage();
                 }
-            });
+            }, onError('habits'));
         unsubscribers.push(habitsUnsub);
 
         // Habits Completions listener
@@ -299,7 +314,7 @@ const Sync = (() => {
                 if (typeof HabitsApp !== 'undefined') {
                     HabitsApp.renderCurrentPage();
                 }
-            });
+            }, onError('habitsCompletions'));
         unsubscribers.push(habitsCompletionsUnsub);
 
         // Journal listener
@@ -319,7 +334,7 @@ const Sync = (() => {
                 localStorage.setItem('5mj_entries', JSON.stringify(data5mj));
                 localStorage.setItem('dr_entries', JSON.stringify(dataDR));
                 console.log('[Sync] Journal updated from Firestore');
-            });
+            }, onError('journal'));
         unsubscribers.push(journalUnsub);
 
         // Work Tasks listener
@@ -330,7 +345,7 @@ const Sync = (() => {
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 localStorage.setItem('wk_tasks', JSON.stringify(data));
                 console.log('[Sync] Work tasks updated from Firestore');
-            });
+            }, onError('workTasks'));
         unsubscribers.push(workTasksUnsub);
 
         // Work Clients listener
@@ -341,7 +356,7 @@ const Sync = (() => {
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 localStorage.setItem('wk_clients', JSON.stringify(data));
                 console.log('[Sync] Work clients updated from Firestore');
-            });
+            }, onError('workClients'));
         unsubscribers.push(workClientsUnsub);
 
         // Work Projects listener
@@ -352,7 +367,7 @@ const Sync = (() => {
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 localStorage.setItem('wk_projects', JSON.stringify(data));
                 console.log('[Sync] Work projects updated from Firestore');
-            });
+            }, onError('workProjects'));
         unsubscribers.push(workProjectsUnsub);
 
         // Weekly Review listener
@@ -372,13 +387,12 @@ const Sync = (() => {
                     }
                 });
                 if (Object.keys(summaries).length > 0) {
-                    // Merge with existing summaries (don't overwrite if Firestore has fewer)
                     const existing = JSON.parse(localStorage.getItem('wr_summaries') || '{}');
                     Object.assign(existing, summaries);
                     localStorage.setItem('wr_summaries', JSON.stringify(existing));
                 }
                 console.log('[Sync] Weekly review updated from Firestore');
-            });
+            }, onError('weeklyReview'));
         unsubscribers.push(weeklyReviewUnsub);
 
         console.log('[Sync] Real-time listeners active');

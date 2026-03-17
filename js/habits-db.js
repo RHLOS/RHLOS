@@ -534,6 +534,13 @@ const HabitsDB = (() => {
         }
 
         _set(HABITS_KEY, filtered);
+
+        // Sync migrated habits to Firestore
+        if (typeof Sync !== 'undefined' && Sync.saveDocument) {
+            filtered.forEach(h => {
+                Sync.saveDocument('habits', h.id, h);
+            });
+        }
     }
 
     // ============================================================
