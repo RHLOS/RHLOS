@@ -45,20 +45,7 @@ const ExportService = (() => {
         return (str || '').replace(/,/g, ';').replace(/\n/g, ' ');
     }
 
-    // --- Generate date range array ---
-    function _dateRange(startDate, endDate) {
-        const dates = [];
-        const current = new Date(startDate + 'T00:00:00');
-        const end = new Date(endDate + 'T00:00:00');
-        while (current <= end) {
-            const y = current.getFullYear();
-            const m = String(current.getMonth() + 1).padStart(2, '0');
-            const d = String(current.getDate()).padStart(2, '0');
-            dates.push(`${y}-${m}-${d}`);
-            current.setDate(current.getDate() + 1);
-        }
-        return dates;
-    }
+    // Date range helper → shared via Utils.dateRange()
 
     // --- CSV: Daily overview ---
     function generateDailyCSV(days, sessions) {
@@ -150,7 +137,7 @@ const ExportService = (() => {
     function generateHabitsCSV(startDate, endDate) {
         const habits = _getHabitsData().filter(h => !h.archived);
         const completions = _getCompletionsData();
-        const dates = _dateRange(startDate, endDate);
+        const dates = Utils.dateRange(startDate, endDate);
 
         const lines = ['Datum,Habit,Categorie,Status'];
 
@@ -176,7 +163,7 @@ const ExportService = (() => {
     function generateJournalCSV(startDate, endDate) {
         const fiveMJ = _get5MJData();
         const dailyReview = _getDRData();
-        const dates = _dateRange(startDate, endDate);
+        const dates = Utils.dateRange(startDate, endDate);
 
         // 5MJ section
         const mjLines = ['Datum,Dankbaar,Geweldig 1,Geweldig 2,Geweldig 3,Affirmaties'];
@@ -384,7 +371,7 @@ const ExportService = (() => {
         if (includeHabits) {
             const habits = _getHabitsData().filter(h => !h.archived);
             const completions = _getCompletionsData();
-            const dates = _dateRange(startDate, endDate);
+            const dates = Utils.dateRange(startDate, endDate);
 
             // Build a summary: per habit, count done/skipped/missed
             const habitRows = [];
@@ -422,7 +409,7 @@ const ExportService = (() => {
         if (includeJournal) {
             const fiveMJ = _get5MJData();
             const dailyReview = _getDRData();
-            const dates = _dateRange(startDate, endDate);
+            const dates = Utils.dateRange(startDate, endDate);
 
             // 5MJ entries
             const mjEntries = dates.filter(d => {

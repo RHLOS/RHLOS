@@ -20,13 +20,6 @@ const WeeklyReview = (() => {
     // DATE HELPERS
     // ========================================================
 
-    function _dateKey(d) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-    }
-
     /** Get the Monday of the week containing the given date */
     function _getMonday(date) {
         const d = new Date(date);
@@ -44,18 +37,6 @@ const WeeklyReview = (() => {
         const yearStart = new Date(d.getFullYear(), 0, 1);
         const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
         return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
-    }
-
-    /** Generate array of YYYY-MM-DD strings from startDate to endDate */
-    function _dateRange(startStr, endStr) {
-        const dates = [];
-        const current = new Date(startStr + 'T00:00:00');
-        const end = new Date(endStr + 'T00:00:00');
-        while (current <= end) {
-            dates.push(_dateKey(current));
-            current.setDate(current.getDate() + 1);
-        }
-        return dates;
     }
 
     /** Format date for display */
@@ -149,10 +130,10 @@ const WeeklyReview = (() => {
         const sunday = new Date(monday);
         sunday.setDate(sunday.getDate() + 6);
 
-        const startStr = _dateKey(monday);
-        const endStr = _dateKey(sunday);
+        const startStr = Utils.dateKey(monday);
+        const endStr = Utils.dateKey(sunday);
         const weekKey = _getISOWeekKey(monday);
-        const dates = _dateRange(startStr, endStr);
+        const dates = Utils.dateRange(startStr, endStr);
 
         // --- Health Logger data ---
         const hlDays = DB.getDaysInRange(startStr, endStr);
