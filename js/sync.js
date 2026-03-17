@@ -401,6 +401,10 @@ const Sync = (() => {
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
                 if (safeSetLocal('ht_habits', data, 'array')) {
                     console.log('[Sync] Habits updated from Firestore');
+                    // Re-run migration on synced data (e.g. move Hydrate to OPRUIMEN)
+                    if (typeof HabitsDB !== 'undefined' && HabitsDB.migrate) {
+                        HabitsDB.migrate();
+                    }
                     if (typeof HabitsApp !== 'undefined') {
                         HabitsApp.renderCurrentPage();
                     }
