@@ -119,8 +119,6 @@ const App = (() => {
                 parts.push(coffeePart);
             }
             if (d.alcohol) parts.push(`🍷${d.alcoholGlasses || 0}`);
-            const waterAmt = d.waterAmount != null ? d.waterAmount : (d.water2L ? 2 : 0);
-            parts.push('💧' + waterAmt + 'L');
             drinksVal = parts.join(' ');
         }
 
@@ -391,7 +389,6 @@ const App = (() => {
         document.getElementById('input-drinks-decaf').value = '';
         document.getElementById('input-drinks-alcohol-glasses').value = '';
         document.getElementById('input-drinks-alcohol-note').value = '';
-        document.getElementById('input-drinks-water').value = '';
         drinksAlcohol = false;
         setDrinksAlcohol(false);
         openModal('modal-drinks');
@@ -416,8 +413,7 @@ const App = (() => {
         const decaf = parseInt(document.getElementById('input-drinks-decaf').value) || 0;
         const alcoholGlasses = parseInt(document.getElementById('input-drinks-alcohol-glasses').value) || 0;
         const alcoholNote = document.getElementById('input-drinks-alcohol-note').value.trim();
-        const waterAmount = parseFloat(document.getElementById('input-drinks-water').value) || 0;
-        DB.addDrinks(homeDateKey(), coffee, decaf, drinksAlcohol, alcoholGlasses, alcoholNote, waterAmount);
+        DB.addDrinks(homeDateKey(), coffee, decaf, drinksAlcohol, alcoholGlasses, alcoholNote, 0);
         closeModal('modal-drinks');
         renderHome();
     }
@@ -637,8 +633,6 @@ const App = (() => {
                 const dParts = [];
                 if (lastDrink.coffee > 0) dParts.push(`☕${lastDrink.coffee}`);
                 if (lastDrink.alcohol) dParts.push(`🍷${lastDrink.alcoholGlasses || 0}`);
-                const histWater = lastDrink.waterAmount != null ? lastDrink.waterAmount : (lastDrink.water2L ? 2 : 0);
-                dParts.push('💧' + histWater + 'L');
                 drinks = dParts.join(' ');
             }
 
@@ -823,14 +817,11 @@ const App = (() => {
                     alcoholLine = `Alcohol: Ja · ${d.alcoholGlasses || 0} glazen`;
                     if (d.alcoholNote) alcoholLine += ` · ${escapeHtml(d.alcoholNote)}`;
                 }
-                const detailWater = d.waterAmount != null ? d.waterAmount : (d.water2L ? 2 : 0);
-                const waterLine = 'Water: ' + detailWater + ' liter';
                 html += `<div class="detail-row">
                     <span class="detail-icon">☕</span>
                     <div class="detail-content">
                         <div class="detail-value">${coffeeLine}</div>
                         <div class="detail-label">${alcoholLine}</div>
-                        <div class="detail-label">${waterLine}</div>
                         <div class="detail-label" style="margin-top:2px;color:var(--text2);">${formatTime(d.timestamp)}</div>
                     </div>
                     <div class="detail-actions">

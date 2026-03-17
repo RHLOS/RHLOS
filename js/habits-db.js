@@ -446,20 +446,20 @@ const HabitsDB = (() => {
     // ============================================================
     const DEFAULT_HABITS = [
         // HEALTH
-        { name: 'Hydrate',      icon: '💧', color: '#007aff', category: 'HEALTH',  order: 0 },
-        { name: 'Meditatie',    icon: '🧘', color: '#af52de', category: 'HEALTH',  order: 1 },
-        { name: 'R&S',          icon: '🌅', color: '#ff9500', category: 'HEALTH',  order: 2 },
-        { name: 'Movement',     icon: '🏃', color: '#34c759', category: 'HEALTH',  order: 3 },
-        { name: 'Supplementen', icon: '💊', color: '#ff3b30', category: 'HEALTH',  order: 4 },
+        { name: 'Meditatie',    icon: '🧘', color: '#af52de', category: 'HEALTH',  order: 0 },
+        { name: 'R&S',          icon: '🌅', color: '#ff9500', category: 'HEALTH',  order: 1 },
+        { name: 'Movement',     icon: '🏃', color: '#34c759', category: 'HEALTH',  order: 2 },
+        { name: 'Supplementen', icon: '💊', color: '#ff3b30', category: 'HEALTH',  order: 3 },
         // OPSTART
-        { name: 'Mail',         icon: '📧', color: '#007aff', category: 'OPSTART', order: 5 },
-        { name: 'Berichten',    icon: '💬', color: '#34c759', category: 'OPSTART', order: 6 },
-        { name: 'MSTD',         icon: '📋', color: '#ff9500', category: 'OPSTART', order: 7 },
-        { name: 'Linkedin',     icon: '🔗', color: '#5856d6', category: 'OPSTART', order: 8 },
-        { name: 'Admin',        icon: '🗂️', color: '#8e8e93', category: 'OPSTART', order: 9 },
-        { name: 'Lezen',        icon: '📚', color: '#af52de', category: 'OPSTART', order: 10 },
-        { name: '5MJ',          icon: '📓', color: '#ff3b30', category: 'OPSTART', order: 11 },
+        { name: 'Mail',         icon: '📧', color: '#007aff', category: 'OPSTART', order: 4 },
+        { name: 'Berichten',    icon: '💬', color: '#34c759', category: 'OPSTART', order: 5 },
+        { name: 'MSTD',         icon: '📋', color: '#ff9500', category: 'OPSTART', order: 6 },
+        { name: 'Linkedin',     icon: '🔗', color: '#5856d6', category: 'OPSTART', order: 7 },
+        { name: 'Admin',        icon: '🗂️', color: '#8e8e93', category: 'OPSTART', order: 8 },
+        { name: 'Lezen',        icon: '📚', color: '#af52de', category: 'OPSTART', order: 9 },
+        { name: '5MJ',          icon: '📓', color: '#ff3b30', category: 'OPSTART', order: 10 },
         // OPRUIMEN
+        { name: 'Hydrate',      icon: '💧', color: '#007aff', category: 'OPRUIMEN', order: 11 },
         { name: 'Daily Review', icon: '📝', color: '#5856d6', category: 'OPRUIMEN', order: 12 },
     ];
 
@@ -522,6 +522,17 @@ const HabitsDB = (() => {
                 existingHabit.color = def.color;
             }
         }
+
+        // Move Hydrate from HEALTH to OPRUIMEN
+        const hydrate = filtered.find(h => h.name === 'Hydrate');
+        if (hydrate && hydrate.category === 'HEALTH') {
+            hydrate.category = 'OPRUIMEN';
+            // Reorder: HEALTH (0-3), OPSTART (4-10), OPRUIMEN (11-12)
+            const catOrder = { 'HEALTH': 0, 'OPSTART': 1, 'OPRUIMEN': 2 };
+            filtered.sort((a, b) => (catOrder[a.category] || 99) - (catOrder[b.category] || 99) || (a.order || 0) - (b.order || 0));
+            filtered.forEach((h, i) => h.order = i);
+        }
+
         _set(HABITS_KEY, filtered);
     }
 
