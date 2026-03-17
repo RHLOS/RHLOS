@@ -499,7 +499,7 @@ const WeeklyReview = (() => {
             for (const habit of hab.details) {
                 const barColor = habit.pct >= 80 ? 'var(--green, #34c759)' : habit.pct >= 50 ? 'var(--orange, #ff9500)' : 'var(--red, #ff3b30)';
                 html += `<div class="wr-habit-row">
-                    <span class="wr-habit-name">${habit.icon} ${habit.name}</span>
+                    <span class="wr-habit-name">${Utils.escapeHtml(habit.icon)} ${Utils.escapeHtml(habit.name)}</span>
                     <span class="wr-habit-score">${habit.done}/7</span>
                     <div class="wr-habit-bar"><div class="wr-habit-bar-fill" style="width:${habit.pct}%;background:${barColor}"></div></div>
                 </div>`;
@@ -516,7 +516,7 @@ const WeeklyReview = (() => {
 
         html += _summaryCard('5-Minute Journal', `${j.fiveMJDays}/7 dagen`, '', '');
         html += _summaryCard('Daily Review', `${j.dailyReviewDays}/7 dagen`, '', '');
-        html += _summaryCard('Workouts', `${w.count}x`, w.names.length > 0 ? w.names.join(', ') : '', '');
+        html += _summaryCard('Workouts', `${w.count}x`, w.names.length > 0 ? w.names.map(n => Utils.escapeHtml(n)).join(', ') : '', '');
 
         html += '</div></div>';
 

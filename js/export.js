@@ -269,6 +269,7 @@ const ExportService = (() => {
     function exportPDF(startDate, endDate, includeWorkouts, includeHabits, includeJournal, includeWeekSummary) {
         const days = DB.getDaysInRange(startDate, endDate);
         const sessions = DB.getSessionsInRange(startDate, endDate);
+        const esc = Utils.escapeHtml;
 
         let html = `
         <html><head>
@@ -301,9 +302,9 @@ const ExportService = (() => {
             const bpStrs = day.bloodPressure.map(b => b.skipped ? `Niet gemeten (${b.moment})` : `${b.systolic}/${b.diastolic} (${b.moment})`);
             const pulseStrs = day.bloodPressure.filter(b => !b.skipped).map(b => b.pulse);
             const sleepStrs = day.sleepEntries.map(s => `${s.hours}u`);
-            const sleepLocationStrs = day.sleepEntries.map(s => s.location || '–');
+            const sleepLocationStrs = day.sleepEntries.map(s => esc(s.location));
             const sleepInterruptedStrs = day.sleepEntries.map(s => s.interrupted ? 'Ja' : 'Nee');
-            const sleepNoteStrs = day.sleepEntries.map(s => s.note || '–');
+            const sleepNoteStrs = day.sleepEntries.map(s => esc(s.note));
             const gymStrs = day.gymSessions.map(g => {
                 let str = `${g.type} (${g.durationMinutes}m`;
                 if (g.km) str += `, ${g.km}km`;
@@ -338,7 +339,7 @@ const ExportService = (() => {
             const nutritionSummary = nutritionStrs.length > 0 ? nutritionStrs.join(', ') : '–';
             const drinks = drinksStrs.length > 0 ? drinksStrs.join(', ') : '–';
             const daySessions = sessions.filter(s => s.date === day.date);
-            const workout = daySessions.length > 0 ? daySessions.map(s => s.templateName).join(', ') : '–';
+            const workout = daySessions.length > 0 ? daySessions.map(s => esc(s.templateName)).join(', ') : '–';
 
             html += `<tr><td>${formatDateNL(day.date, true)}</td><td>${weight}</td><td>${bp}</td><td>${pulse}</td><td>${sleep}</td><td>${sleepLocation}</td><td>${sleepInterrupted}</td><td>${sleepNote}</td><td>${gym}</td><td>${nutritionSummary}</td><td>${drinks}</td><td>${workout}</td></tr>`;
         }
@@ -360,7 +361,7 @@ const ExportService = (() => {
                         return `${r}×${w}`;
                     }).join(', ');
 
-                    html += `<tr><td>${formatDateNL(session.date, true)}</td><td>${session.templateName}</td><td>${ex.name}</td><td>${setsStr}</td></tr>`;
+                    html += `<tr><td>${formatDateNL(session.date, true)}</td><td>${esc(session.templateName)}</td><td>${esc(ex.name)}</td><td>${setsStr}</td></tr>`;
                 }
             }
 
@@ -398,7 +399,7 @@ const ExportService = (() => {
                     <tr><th>Habit</th><th>Categorie</th><th>Gedaan</th><th>Overgeslagen</th><th>Gemist</th><th>Score</th></tr>`;
 
                 for (const row of habitRows) {
-                    html += `<tr><td>${row.icon} ${row.name}</td><td>${row.category || '–'}</td><td>${row.done}</td><td>${row.skipped}</td><td>${row.missed}</td><td>${row.pct}%</td></tr>`;
+                    html += `<tr><td>${esc(row.icon)} ${esc(row.name)}</td><td>${esc(row.category)}</td><td>${row.done}</td><td>${row.skipped}</td><td>${row.missed}</td><td>${row.pct}%</td></tr>`;
                 }
 
                 html += '</table>';
@@ -424,7 +425,7 @@ const ExportService = (() => {
 
                 for (const dateStr of mjEntries) {
                     const e = fiveMJ[dateStr];
-                    html += `<tr><td>${formatDateNL(dateStr, true)}</td><td>${e.grateful || '–'}</td><td>${e.great1 || '–'}</td><td>${e.great2 || '–'}</td><td>${e.great3 || '–'}</td><td>${e.affirmations || '–'}</td></tr>`;
+                    html += `<tr><td>${formatDateNL(dateStr, true)}</td><td>${esc(e.grateful)}</td><td>${esc(e.great1)}</td><td>${esc(e.great2)}</td><td>${esc(e.great3)}</td><td>${esc(e.affirmations)}</td></tr>`;
                 }
 
                 html += '</table>';
@@ -443,7 +444,7 @@ const ExportService = (() => {
 
                 for (const dateStr of drEntries) {
                     const e = dailyReview[dateStr];
-                    html += `<tr><td>${formatDateNL(dateStr, true)}</td><td>${e.dag || '–'}</td><td>${e.energiePlus || '–'}</td><td>${e.energieMin || '–'}</td><td>${e.hoogtepunt1 || '–'}</td><td>${e.hoogtepunt2 || '–'}</td><td>${e.hoogtepunt3 || '–'}</td></tr>`;
+                    html += `<tr><td>${formatDateNL(dateStr, true)}</td><td>${esc(e.dag)}</td><td>${esc(e.energiePlus)}</td><td>${esc(e.energieMin)}</td><td>${esc(e.hoogtepunt1)}</td><td>${esc(e.hoogtepunt2)}</td><td>${esc(e.hoogtepunt3)}</td></tr>`;
                 }
 
                 html += '</table>';

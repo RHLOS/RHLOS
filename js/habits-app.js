@@ -703,9 +703,7 @@ const HabitsApp = (() => {
     // HELPERS
     // ============================================================
     function _escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+        return Utils.escapeHtml(str);
     }
 
     function formatFullDate(date) {

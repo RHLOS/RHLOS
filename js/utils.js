@@ -31,5 +31,20 @@ const Utils = (() => {
         return dates;
     }
 
-    return { dateKey, dateRange };
+    /**
+     * Escape HTML special characters to prevent XSS.
+     * Returns '–' for falsy values (null, undefined, empty string).
+     */
+    function escapeHtml(str) {
+        if (!str && str !== 0) return '–';
+        const s = String(str);
+        return s
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    return { dateKey, dateRange, escapeHtml };
 })();
