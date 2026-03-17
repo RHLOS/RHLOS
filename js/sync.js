@@ -240,6 +240,111 @@ const Sync = (() => {
         return cleaned;
     }
 
+    // Don't overwrite non-empty local data with empty Firestore data
+    // This protects against data loss when Firestore is empty but localStorage has data
+    function safeSetLocal(key, newData, format) {
+        const isEmpty = format === 'array' ? newData.length === 0 : Object.keys(newData).length === 0;
+        if (isEmpty) {
+            const existing = localStorage.getItem(key);
+            if (existing) {
+                const parsed = JSON.parse(existing);
+                const localHasData = format === 'array' ? parsed.length > 0 : Object.keys(parsed).length > 0;
+                if (localHasData) {
+                    console.warn('[Sync] Firestore empty for', key, '— keeping local data and uploading to Firestore');
+                    // Upload local data to Firestore instead of overwriting
+                    uploadCollectionFromLocal(key);
+                    return false; // signal: did NOT overwrite
+                }
+            }
+        }
+        localStorage.setItem(key, JSON.stringify(newData));
+        return true;
+    }
+
+    // Re-upload a single localStorage collection to Firestore
+    function uploadCollectionFromLocal(key) {
+        const db = getFirebaseDb();
+        if (!db || !userId) return;
+
+        const ts = firebase.firestore.FieldValue.serverTimestamp();
+
+        if (key === 'ht_habits') {
+            const habits = JSON.parse(localStorage.getItem(key) || '[]');
+            habits.forEach(h => {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.habits).doc(h.id)
+                    .set({ ...h, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            });
+        } else if (key === 'ht_completions') {
+            const completions = JSON.parse(localStorage.getItem(key) || '{}');
+            for (const [dateKey, comps] of Object.entries(completions)) {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.habitsCompletions).doc(dateKey)
+                    .set({ completions: comps, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            }
+        } else if (key === 'hl_days') {
+            const days = JSON.parse(localStorage.getItem(key) || '{}');
+            for (const [dateKey, dayData] of Object.entries(days)) {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.healthDays).doc(dateKey)
+                    .set({ ...dayData, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            }
+        } else if (key === 'hl_sessions') {
+            const sessions = JSON.parse(localStorage.getItem(key) || '[]');
+            sessions.forEach(s => {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.healthSessions).doc(s.id)
+                    .set({ ...s, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            });
+        } else if (key === 'hl_templates') {
+            const templates = JSON.parse(localStorage.getItem(key) || '[]');
+            templates.forEach(t => {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.healthTemplates).doc(t.id)
+                    .set({ ...t, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            });
+        } else if (key === '5mj_entries' || key === 'dr_entries') {
+            const entries = JSON.parse(localStorage.getItem(key) || '{}');
+            const prefix = key === '5mj_entries' ? '5mj_' : 'dr_';
+            const type = key === '5mj_entries' ? '5mj' : 'daily_review';
+            for (const [dateKey, entry] of Object.entries(entries)) {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.journal).doc(prefix + dateKey)
+                    .set({ type, date: dateKey, ...entry, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            }
+        } else if (key === 'wk_tasks') {
+            const tasks = JSON.parse(localStorage.getItem(key) || '[]');
+            tasks.forEach(t => {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.workTasks).doc(t.id)
+                    .set({ ...t, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            });
+        } else if (key === 'wk_clients') {
+            const clients = JSON.parse(localStorage.getItem(key) || '[]');
+            clients.forEach(c => {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.workClients).doc(c.id)
+                    .set({ ...c, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            });
+        } else if (key === 'wk_projects') {
+            const projects = JSON.parse(localStorage.getItem(key) || '[]');
+            projects.forEach(p => {
+                db.collection('users').doc(userId)
+                    .collection(COLLECTIONS.workProjects).doc(p.id)
+                    .set({ ...p, updatedAt: ts }, { merge: true })
+                    .catch(e => console.error('[Sync] Upload failed:', e));
+            });
+        }
+    }
+
     // Set up real-time listeners for Firestore changes
     function setupRealtimeListeners() {
         const db = getFirebaseDb();
@@ -257,10 +362,11 @@ const Sync = (() => {
                 snapshot.forEach(doc => {
                     data[doc.id] = cleanDoc(doc.data());
                 });
-                localStorage.setItem('hl_days', JSON.stringify(data));
-                console.log('[Sync] Health days updated from Firestore');
-                if (typeof App !== 'undefined' && App.showPage) {
-                    App.showPage('home');
+                if (safeSetLocal('hl_days', data, 'object')) {
+                    console.log('[Sync] Health days updated from Firestore');
+                    if (typeof App !== 'undefined' && App.showPage) {
+                        App.showPage('home');
+                    }
                 }
             }, onError('healthDays'));
         unsubscribers.push(healthDaysUnsub);
@@ -271,7 +377,7 @@ const Sync = (() => {
             .onSnapshot((snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
-                localStorage.setItem('hl_sessions', JSON.stringify(data));
+                safeSetLocal('hl_sessions', data, 'array');
                 console.log('[Sync] Health sessions updated from Firestore');
             }, onError('healthSessions'));
         unsubscribers.push(healthSessionsUnsub);
@@ -282,7 +388,7 @@ const Sync = (() => {
             .onSnapshot((snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
-                localStorage.setItem('hl_templates', JSON.stringify(data));
+                safeSetLocal('hl_templates', data, 'array');
                 console.log('[Sync] Health templates updated from Firestore');
             }, onError('healthTemplates'));
         unsubscribers.push(healthTemplatesUnsub);
@@ -293,10 +399,11 @@ const Sync = (() => {
             .onSnapshot((snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
-                localStorage.setItem('ht_habits', JSON.stringify(data));
-                console.log('[Sync] Habits updated from Firestore');
-                if (typeof HabitsApp !== 'undefined') {
-                    HabitsApp.renderCurrentPage();
+                if (safeSetLocal('ht_habits', data, 'array')) {
+                    console.log('[Sync] Habits updated from Firestore');
+                    if (typeof HabitsApp !== 'undefined') {
+                        HabitsApp.renderCurrentPage();
+                    }
                 }
             }, onError('habits'));
         unsubscribers.push(habitsUnsub);
@@ -309,10 +416,11 @@ const Sync = (() => {
                 snapshot.forEach(doc => {
                     data[doc.id] = doc.data().completions;
                 });
-                localStorage.setItem('ht_completions', JSON.stringify(data));
-                console.log('[Sync] Habits completions updated from Firestore');
-                if (typeof HabitsApp !== 'undefined') {
-                    HabitsApp.renderCurrentPage();
+                if (safeSetLocal('ht_completions', data, 'object')) {
+                    console.log('[Sync] Habits completions updated from Firestore');
+                    if (typeof HabitsApp !== 'undefined') {
+                        HabitsApp.renderCurrentPage();
+                    }
                 }
             }, onError('habitsCompletions'));
         unsubscribers.push(habitsCompletionsUnsub);
@@ -331,8 +439,8 @@ const Sync = (() => {
                         dataDR[docData.date] = docData;
                     }
                 });
-                localStorage.setItem('5mj_entries', JSON.stringify(data5mj));
-                localStorage.setItem('dr_entries', JSON.stringify(dataDR));
+                safeSetLocal('5mj_entries', data5mj, 'object');
+                safeSetLocal('dr_entries', dataDR, 'object');
                 console.log('[Sync] Journal updated from Firestore');
             }, onError('journal'));
         unsubscribers.push(journalUnsub);
@@ -343,7 +451,7 @@ const Sync = (() => {
             .onSnapshot((snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
-                localStorage.setItem('wk_tasks', JSON.stringify(data));
+                safeSetLocal('wk_tasks', data, 'array');
                 console.log('[Sync] Work tasks updated from Firestore');
             }, onError('workTasks'));
         unsubscribers.push(workTasksUnsub);
@@ -354,7 +462,7 @@ const Sync = (() => {
             .onSnapshot((snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
-                localStorage.setItem('wk_clients', JSON.stringify(data));
+                safeSetLocal('wk_clients', data, 'array');
                 console.log('[Sync] Work clients updated from Firestore');
             }, onError('workClients'));
         unsubscribers.push(workClientsUnsub);
@@ -365,7 +473,7 @@ const Sync = (() => {
             .onSnapshot((snapshot) => {
                 const data = [];
                 snapshot.forEach(doc => data.push(cleanDoc(doc.data())));
-                localStorage.setItem('wk_projects', JSON.stringify(data));
+                safeSetLocal('wk_projects', data, 'array');
                 console.log('[Sync] Work projects updated from Firestore');
             }, onError('workProjects'));
         unsubscribers.push(workProjectsUnsub);
