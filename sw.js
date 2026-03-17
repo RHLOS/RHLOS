@@ -2,7 +2,7 @@
 // Service Worker for RHLOS PWA
 // ============================================================
 
-const CACHE_NAME = 'rhlos-v22';
+const CACHE_NAME = 'rhlos-v23';
 const OFFLINE_URL = './';
 
 // Files to cache for offline use (relative paths for GitHub Pages compatibility)

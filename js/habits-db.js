@@ -531,7 +531,7 @@ const HabitsDB = (() => {
 
         // Always ensure correct category order: HEALTH → OPSTART → OPRUIMEN
         const catOrder = { 'HEALTH': 0, 'OPSTART': 1, 'OPRUIMEN': 2 };
-        filtered.sort((a, b) => (catOrder[a.category] || 99) - (catOrder[b.category] || 99) || (a.order || 0) - (b.order || 0));
+        filtered.sort((a, b) => (catOrder[a.category] ?? 99) - (catOrder[b.category] ?? 99) || (a.order || 0) - (b.order || 0));
         filtered.forEach((h, i) => h.order = i);
 
         _set(HABITS_KEY, filtered);
